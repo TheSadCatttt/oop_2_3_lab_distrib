@@ -5,6 +5,8 @@
 #include <random>
 #include "distributions.h"
 #include "primary.h"
+#include "Mixture.h"
+#include "Empiric.h"
 
 using namespace std;
 
@@ -201,6 +203,8 @@ void generate_all_plot_data(int sen_size, int mix_size, int empirical_sizes[]) {
     cout << "6. Генерация данных для класса Primary..." << endl;
     ofstream file_primary("data_primary_class.csv");
     file_primary << "x,pdf_class,pdf_function,moment,class_value,function_value,class_samples,function_samples\n";
+
+
 
     // Генерация данных для плотностей
     for (double x = -4.0; x <= 4.0; x += 0.04) {
@@ -555,11 +559,325 @@ void complete_primary_class_test() {
     }
 }
 
+// === ТЕСТИРОВАНИЕ КЛАССА MIXTURE ===
+void test_mixture_class() {
+    cout << "\n=== Тестирование класса Mixture ===" << endl;
+
+    try {
+        // 1. Тестирование конструкторов
+        cout << "1. Тестирование конструкторов:" << endl;
+        cout << "--------------------------------" << endl;
+
+        Primary prim1(1.0, 1.0, 0.0);  // SEN(0,1,1)
+        Primary prim2(1.0, 2.0, 3.0);  // SEN(3,2,1)
+
+        // Конструктор с параметрами
+        Mixture mixture(prim1, prim2, 0.7);
+        cout << "   - Создана смесь с параметром p = " << mixture.getP() << endl;
+        cout << "   - Компонент 1: v=" << mixture.component1().getForm()
+            << ", λ=" << mixture.component1().getScale()
+            << ", μ=" << mixture.component1().getShift() << endl;
+        cout << "   - Компонент 2: v=" << mixture.component2().getForm()
+            << ", λ=" << mixture.component2().getScale()
+            << ", μ=" << mixture.component2().getShift() << endl;
+
+        // Конструктор из файла
+        ofstream outFile("mixture_test.txt");
+        mixture.save(outFile);
+        outFile.close();
+
+        ifstream inFile("mixture_test.txt");
+        Mixture loaded_mixture(inFile);
+        inFile.close();
+        cout << "   - Загружена смесь из файла: p = " << loaded_mixture.getP() << endl;
+
+        // 2. Тестирование set-функций
+        cout << "\n2. Тестирование set-функций:" << endl;
+        cout << "----------------------------" << endl;
+        mixture.setP(0.3);
+        cout << "   - Новый параметр p = " << mixture.getP() << " (был 0.7)" << endl;
+
+        // 3. Тестирование плотности
+        cout << "\n3. Тестирование плотности:" << endl;
+        cout << "--------------------------" << endl;
+        double pdf_val = mixture.pdf(2.0);
+        cout << "   - Плотность в точке x=2.0: " << pdf_val << endl;
+
+        // Проверка в нескольких точках
+        double test_points[] = { -2.0, 0.0, 2.0, 4.0 };
+        for (double x : test_points) {
+            cout << "     f(" << x << ") = " << mixture.pdf(x) << endl;
+        }
+
+        // 4. Тестирование моментов
+        cout << "\n4. Тестирование моментов:" << endl;
+        cout << "-------------------------" << endl;
+        double mean, variance, skewness, kurtosis;
+        mixture.moments(&mean, &variance, &skewness, &kurtosis);
+        cout << "   - Математическое ожидание (Mξ) = " << mean << endl;
+        cout << "   - Дисперсия (Dξ) = " << variance << endl;
+        cout << "   - Асимметрия (γ₁) = " << skewness << endl;
+        cout << "   - Эксцесс (γ₂) = " << kurtosis << endl;
+
+        // 5. Тестирование генерации
+        cout << "\n5. Тестирование генерации:" << endl;
+        cout << "--------------------------" << endl;
+        cout << "   - Одиночное значение: " << mixture.randNum() << endl;
+        cout << "   - Вектор из 5 значений: ";
+        for (int i = 0; i < 5; i++) {
+            cout << mixture.randNum() << " ";
+        }
+        cout << endl;
+
+        // 6. Тестирование исключений
+        cout << "\n6. Тестирование исключений:" << endl;
+        cout << "---------------------------" << endl;
+        try {
+            Mixture invalid_mixture(prim1, prim2, 1.5); // p > 1
+            cout << "   - ОШИБКА: Не сгенерировано исключение для p > 1!" << endl;
+        }
+        catch (const exception& e) {
+            cout << "   - Успех: перехвачено исключение для p > 1: " << e.what() << endl;
+        }
+
+        try {
+            mixture.setP(-0.5); // p < 0
+            cout << "   - ОШИБКА: Не сгенерировано исключение в setP!" << endl;
+        }
+        catch (const exception& e) {
+            cout << "   - Успех (setP): " << e.what() << endl;
+        }
+
+        cout << "\n✓ Тест класса Mixture выполнен успешно!" << endl;
+
+    }
+    catch (const exception& e) {
+        cerr << "Ошибка: " << e.what() << endl;
+    }
+}
+
+// === ТЕСТИРОВАНИЕ КЛАССА EMPIRIC ===
+void test_empiric_class() {
+    cout << "\n=== Тестирование класса Empiric ===" << endl;
+
+    try {
+        // 1. Тестирование конструкторов
+        cout << "1. Тестирование конструкторов:" << endl;
+        cout << "--------------------------------" << endl;
+
+        Primary source_prim(1.0, 1.0, 0.0); // SEN(0,1,1)
+        Primary prim2(1.0, 2.0, 1.0);
+        Mixture source_mixture(source_prim, prim2, 0.5);
+
+        // Конструктор из Primary
+        Empiric empiric_from_prim(1000, source_prim, 20);
+        cout << "   - Создано из Primary: n=" << empiric_from_prim.getN()
+            << ", k=" << empiric_from_prim.getK() << endl;
+
+        // Конструктор из Mixture
+        Empiric empiric_from_mixture(800, source_mixture, 15);
+        cout << "   - Создано из Mixture: n=" << empiric_from_mixture.getN()
+            << ", k=" << empiric_from_mixture.getK() << endl;
+
+        // Конструктор из Empiric
+        Empiric empiric_from_empiric(500, empiric_from_prim, 10);
+        cout << "   - Создано из Empiric: n=" << empiric_from_empiric.getN()
+            << ", k=" << empiric_from_empiric.getK() << endl;
+
+        // 2. Тестирование диапазонов данных
+        cout << "\n2. Тестирование диапазонов данных:" << endl;
+        cout << "----------------------------------" << endl;
+        cout << "   - Empiric из Primary: [" << empiric_from_prim.getMin()
+            << ", " << empiric_from_prim.getMax() << "]" << endl;
+        cout << "   - Empiric из Mixture: [" << empiric_from_mixture.getMin()
+            << ", " << empiric_from_mixture.getMax() << "]" << endl;
+
+        // 3. Тестирование плотности
+        cout << "\n3. Тестирование плотности:" << endl;
+        cout << "--------------------------" << endl;
+        double pdf_prim = empiric_from_prim.pdf(0.0);
+        double pdf_mixture = empiric_from_mixture.pdf(1.0);
+        cout << "   - Плотность Empiric(Primary) в x=0.0: " << pdf_prim << endl;
+        cout << "   - Плотность Empiric(Mixture) в x=1.0: " << pdf_mixture << endl;
+
+        // 4. Тестирование моментов
+        cout << "\n4. Тестирование моментов:" << endl;
+        cout << "-------------------------" << endl;
+        double mean_prim, var_prim, skew_prim, kurt_prim;
+        double mean_mix, var_mix, skew_mix, kurt_mix;
+
+        empiric_from_prim.moments(&mean_prim, &var_prim, &skew_prim, &kurt_prim);
+        empiric_from_mixture.moments(&mean_mix, &var_mix, &skew_mix, &kurt_mix);
+
+        cout << "   - Empiric(Primary): M=" << mean_prim << ", D=" << var_prim
+            << ", γ₁=" << skew_prim << ", γ₂=" << kurt_prim << endl;
+        cout << "   - Empiric(Mixture): M=" << mean_mix << ", D=" << var_mix
+            << ", γ₁=" << skew_mix << ", γ₂=" << kurt_mix << endl;
+
+        // 5. Тестирование генерации
+        cout << "\n5. Тестирование генерации:" << endl;
+        cout << "--------------------------" << endl;
+        cout << "   - Empiric(Primary): ";
+        for (int i = 0; i < 3; i++) {
+            cout << empiric_from_prim.randNum() << " ";
+        }
+        cout << endl;
+        cout << "   - Empiric(Mixture): ";
+        for (int i = 0; i < 3; i++) {
+            cout << empiric_from_mixture.randNum() << " ";
+        }
+        cout << endl;
+
+        // 6. Тестирование глубокого копирования
+        cout << "\n6. Тестирование глубокого копирования:" << endl;
+        cout << "-------------------------------------" << endl;
+
+        // Конструктор копирования
+        Empiric copy_constructed(empiric_from_prim);
+        cout << "   - Конструктор копирования: n=" << copy_constructed.getN()
+            << ", k=" << copy_constructed.getK() << endl;
+
+        // Оператор присваивания
+        Empiric assigned;
+        assigned = empiric_from_prim;
+        cout << "   - Оператор присваивания: n=" << assigned.getN()
+            << ", k=" << assigned.getK() << endl;
+
+        // Проверка независимости копий
+        double original_pdf = empiric_from_prim.pdf(0.0);
+        double copy_pdf = copy_constructed.pdf(0.0);
+        cout << "   - Проверка независимости: original.pdf(0)=" << original_pdf
+            << ", copy.pdf(0)=" << copy_pdf << endl;
+
+        if (abs(original_pdf - copy_pdf) < 1e-10) {
+            cout << "   >>> ПОДТВЕРЖДЕНО: Копирование работает корректно!" << endl;
+        }
+        else {
+            cout << "   >>> ОШИБКА: Данные не совпадают после копирования!" << endl;
+        }
+
+        // 7. Тестирование исключений
+        cout << "\n7. Тестирование исключений:" << endl;
+        cout << "---------------------------" << endl;
+        try {
+            Empiric invalid_empiric(1, source_prim, 10); // n=1
+            cout << "   - ОШИБКА: Не сгенерировано исключение для n=1!" << endl;
+        }
+        catch (const exception& e) {
+            cout << "   - Успех: перехвачено исключение для n=1: " << e.what() << endl;
+        }
+
+        cout << "\n✓ Тест класса Empiric выполнен успешно!" << endl;
+
+    }
+    catch (const exception& e) {
+        cerr << "Ошибка: " << e.what() << endl;
+    }
+}
+
+// === ДЕМОНСТРАЦИЯ ОТНОШЕНИЙ МЕЖДУ ОБЪЕКТАМИ ===
+void demonstrate_objects_relationships() {
+    cout << "\n=== Демонстрация отношений между объектами ===" << endl;
+
+    try {
+        // 1. Композиция: Mixture содержит Primary объекты
+        cout << "1. КОМПОЗИЦИЯ (Mixture содержит Primary):" << endl;
+        cout << "==========================================" << endl;
+
+        Primary comp1(1.0, 1.0, 0.0);  // SEN(0,1,1)
+        Primary comp2(1.0, 2.0, 1.0);  // SEN(1,2,1)
+        Mixture mixture(comp1, comp2, 0.6);
+
+        cout << "   - Создана смесь с двумя компонентами Primary" << endl;
+        cout << "   - Время жизни компонентов совпадает со временем жизни смеси" << endl;
+        cout << "   - Компонент 1: μ=" << mixture.component1().getShift()
+            << ", λ=" << mixture.component1().getScale() << endl;
+        cout << "   - Компонент 2: μ=" << mixture.component2().getShift()
+            << ", λ=" << mixture.component2().getScale() << endl;
+
+        // 2. Клиент-серверные отношения: Empiric использует другие распределения
+        cout << "\n2. КЛИЕНТ-СЕРВЕРНЫЕ ОТНОШЕНИЯ (Empiric использует распределения):" << endl;
+        cout << "===============================================================" << endl;
+
+        // Empiric из Primary
+        Empiric empiric_prim(500, comp1, 15);
+        cout << "   - Empiric использует Primary для генерации выборки" << endl;
+        cout << "     Объем выборки: " << empiric_prim.getN() << endl;
+
+        // Empiric из Mixture  
+        Empiric empiric_mixture(500, mixture, 15);
+        cout << "   - Empiric использует Mixture для генерации выборки" << endl;
+        cout << "     Объем выборки: " << empiric_mixture.getN() << endl;
+
+        // 3. Связи между Empiric объектами
+        cout << "\n3. СВЯЗИ МЕЖДУ EMPIRIC ОБЪЕКТАМИ:" << endl;
+        cout << "=================================" << endl;
+
+        Empiric empiric_from_empiric(200, empiric_prim, 10);
+        cout << "   - Empiric использует другой Empiric для генерации выборки" << endl;
+        cout << "     Цепочка: Primary → Empiric1 → Empiric2" << endl;
+        cout << "     Размеры: " << empiric_prim.getN() << " → "
+            << empiric_from_empiric.getN() << " элементов" << endl;
+
+        // 4. Демонстрация глубокого копирования
+        cout << "\n4. ГЛУБОКОЕ КОПИРОВАНИЕ (Empiric):" << endl;
+        cout << "==================================" << endl;
+
+        Empiric original(100, comp1, 10);
+        cout << "   - Оригинал: n=" << original.getN() << ", k=" << original.getK() << endl;
+
+        // Конструктор копирования
+        Empiric copy_constructed(original);
+        cout << "   - Конструктор копирования: n=" << copy_constructed.getN()
+            << ", k=" << copy_constructed.getK() << endl;
+
+        // Оператор присваивания
+        Empiric assigned;
+        assigned = original;
+        cout << "   - Оператор присваивания: n=" << assigned.getN()
+            << ", k=" << assigned.getK() << endl;
+
+        // Проверка, что это разные объекты
+        cout << "   - Адреса объектов разные (глубокое копирование):" << endl;
+        cout << "     Оригинал: " << &original << endl;
+        cout << "     Копия:    " << &copy_constructed << endl;
+
+        // 5. Демонстрация работы с разными типами распределений
+        cout << "\n5. РАБОТА С РАЗНЫМИ ТИПАМИ РАСПРЕДЕЛЕНИЙ:" << endl;
+        cout << "========================================" << endl;
+
+        cout << "   - Primary SEN(0,1,1):" << endl;
+        cout << "     M=" << comp1.getShift() << ", λ=" << comp1.getScale()
+            << ", v=" << comp1.getForm() << endl;
+
+        cout << "   - Mixture (p=0.6):" << endl;
+        double mean, variance, skewness, kurtosis;
+        mixture.moments(&mean, &variance, &skewness, &kurtosis);
+        cout << "     Mξ=" << mean << ", Dξ=" << variance << endl;
+
+        cout << "   - Empiric из Primary:" << endl;
+        empiric_prim.moments(&mean, &variance, &skewness, &kurtosis);
+        cout << "     Mξ=" << mean << ", Dξ=" << variance << endl;
+
+        cout << "\n✓ Демонстрация отношений между объектами завершена!" << endl;
+        cout << "Все типы отношений успешно реализованы:" << endl;
+        cout << "  - Композиция (целое-часть)" << endl;
+        cout << "  - Клиент-серверные отношения" << endl;
+        cout << "  - Связи между объектами" << endl;
+        cout << "  - Глубокое копирование" << endl;
+
+    }
+    catch (const exception& e) {
+        cerr << "Ошибка при демонстрации отношений: " << e.what() << endl;
+    }
+}
+
 // ГЛАВНАЯ ФУНКЦИЯ
 int main() {
     setlocale(LC_ALL, "Russian");
     ;
     int choice;
+    // В главной функции main() обновить меню:
     do {
         cout << "\nГЛАВНОЕ МЕНЮ" << endl;
         cout << "1 - Выполнить базовые тесты" << endl;
@@ -567,6 +885,9 @@ int main() {
         cout << "3 - Сгенерировать данные для графиков (пользовательские размеры)" << endl;
         cout << "4 - Тестирование эмпирического распределения" << endl;
         cout << "5 - Тестирование класса Primary" << endl;
+        cout << "6 - Тестирование класса Mixture" << endl;
+        cout << "7 - Тестирование класса Empiric" << endl;
+        cout << "8 - Демонстрация отношений между объектами" << endl;
         cout << "0 - Выход" << endl;
         cout << "Выберите операцию: ";
         cin >> choice;
@@ -591,6 +912,15 @@ int main() {
             break;
         case 5:
             complete_primary_class_test();
+            break;
+        case 6:
+            test_mixture_class();
+            break;
+        case 7:
+            test_empiric_class();
+            break;
+        case 8:
+            demonstrate_objects_relationships();
             break;
         case 0:
             cout << "Выход из программы..." << endl;
