@@ -290,7 +290,7 @@ void generate_all_plot_data(int sen_size, int mix_size, int empirical_sizes[]) {
 void generate_all_plot_data() {
     generate_all_plot_data(DEFAULT_SEN_SAMPLE_SIZE, DEFAULT_MIXTURE_SAMPLE_SIZE, const_cast<int*>(EMPIRICAL_SIZES));
 }
-
+/*
 // Т Е С Т    З А Р А Б О Т А Л
 // ТУТ ТОЖЕ МЕНЯТЬ ЛЯМБДЫ
 void test_primary_class_menu() {
@@ -341,7 +341,7 @@ void test_primary_class_menu() {
     catch (const exception& e) {
         cerr << "Ошибка: " << e.what() << endl;
     }
-}
+}*/
 
 // БАЗОВЫЕ ТЕСТЫ
 void run_basic_tests() {
@@ -376,7 +376,7 @@ void run_basic_tests() {
 }
 
 
-// --- ПОЛНОЕ ТЕСТИРОВАНИЕ КЛАССА PRIMARY ---
+// ПОЛНОЕ ТЕСТИРОВАНИЕ КЛАССА PRIMARY
 void complete_primary_class_test() {
     cout << "\nПОЛНОЕ ТЕСТИРОВАНИЕ КЛАССА PRIMARY" << endl;
 
@@ -392,12 +392,12 @@ void complete_primary_class_test() {
 
         // 1.2. Конструктор из потока
         cout << "1.2. Конструктор из потока" << endl;
-        // Сначала сохраним объект в файл
+        // Сохранение объекта в файл
         ofstream outFile("primary_test.txt");
         dist_params.save(outFile);
         outFile.close();
 
-        // Затем загрузим
+        // загрузка
         ifstream inFile("primary_test.txt");
         Primary dist_file(inFile);
         inFile.close();
@@ -455,7 +455,6 @@ void complete_primary_class_test() {
         }
         cout << endl;
 
-        // Проверка воспроизводимости
         cout << "Генерация работает." << endl;
 
         // 5. Тестирование обработки исключений
