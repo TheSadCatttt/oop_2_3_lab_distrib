@@ -17,7 +17,7 @@ const int EMPIRICAL_SIZES[] = { 100, 1000, 10000 };
 
 // ОБЪЯВЛЕНИЯ ФУНКЦИЙ
 void input_sample_sizes(int& sen_size, int& mix_size, int empirical_sizes[]);
-void test_empirical_distribution();
+void test_emяяpirical_distribution();
 void generate_all_plot_data(int sen_size, int mix_size, int empirical_sizes[]);
 void generate_all_plot_data();
 void test_primary_class_menu();
@@ -343,9 +343,9 @@ void test_primary_class_menu() {
     }
 }
 
-// --- БАЗОВЫЕ ТЕСТЫ ---
+// БАЗОВЫЕ ТЕСТЫ
 void run_basic_tests() {
-    cout << "\n=== Выполнение базовых тестов ===" << endl;
+    cout << "\n Выполнение базовых тестов" << endl;
 
     // Test SEN(0,1,1) ТУТ МЕНЯТЬ ВХОДНЫЕ
     double mu = 5.0, lambda = 2.0, v = 1.0;
@@ -378,12 +378,11 @@ void run_basic_tests() {
 
 // --- ПОЛНОЕ ТЕСТИРОВАНИЕ КЛАССА PRIMARY ---
 void complete_primary_class_test() {
-    cout << "\n=== ПОЛНОЕ ТЕСТИРОВАНИЕ КЛАССА PRIMARY ===" << endl;
+    cout << "\nПОЛНОЕ ТЕСТИРОВАНИЕ КЛАССА PRIMARY" << endl;
 
     try {
         // 1. Тестирование конструкторов и геттеров
         cout << "\n1. Тестирование конструкторов и геттеров" << endl;
-        cout << "-------------------------------------------" << endl;
 
         // 1.1. Конструктор с параметрами
         cout << "1.1. Конструктор с параметрами: Primary(1.0, 2.0, 3.0)" << endl;
@@ -407,12 +406,11 @@ void complete_primary_class_test() {
 
         // 2. Тестирование сеттеров
         cout << "\n2. Тестирование сеттеров" << endl;
-        cout << "------------------------" << endl;
         Primary dist_set(1.0, 1.0, 1.0);  // v=1.0, lambda=1.0, mu=1.0
         cout << "   - Начальное состояние:" << endl;
         cout << "     v (form) = " << dist_set.getForm() << endl;
-        cout << "     λ (scale) = " << dist_set.getScale() << endl;
-        cout << "     μ (shift) = " << dist_set.getShift() << endl;
+        cout << "     lambda (scale) = " << dist_set.getScale() << endl;
+        cout << "     mu (shift) = " << dist_set.getShift() << endl;
 
         // Изменяем параметры
         dist_set.setForm(5.0);    // v = 5.0
@@ -421,12 +419,12 @@ void complete_primary_class_test() {
 
         cout << "   - Конечное состояние:" << endl;
         cout << "     v (form) = " << dist_set.getForm() << endl;
-        cout << "     λ (scale) = " << dist_set.getScale() << endl;
-        cout << "     μ (shift) = " << dist_set.getShift() << endl;
+        cout << "     lambda (scale) = " << dist_set.getScale() << endl;
+        cout << "     mu (shift) = " << dist_set.getShift() << endl;
 
         // Проверяем корректность изменений
         if (dist_set.getForm() == 5.0 && dist_set.getScale() == 3.0 && dist_set.getShift() == 2.0) {
-            cout << "   >>> ПОДТВЕРЖДЕНО: Сеттеры работают корректно!" << endl;
+            cout << "Сеттеры работают корректно." << endl;
         }
         else {
             cout << "   >>> ОШИБКА: Сеттеры работают некорректно!" << endl;
@@ -434,7 +432,6 @@ void complete_primary_class_test() {
 
         // 3. Тестирование аналитических методов
         cout << "\n3. Тестирование аналитических методов" << endl;
-        cout << "-------------------------------------" << endl;
         Primary dist_analysis(1.0, 2.0, 0.0); // Исправленные параметры
         cout << "   - Состояние dist_analysis (v, lambda, mu): " << dist_analysis.getForm() << ", "
             << dist_analysis.getScale() << ", " << dist_analysis.getShift() << endl;
@@ -451,21 +448,18 @@ void complete_primary_class_test() {
 
         // 4. Тестирование генерации случайных чисел
         cout << "\n4. Тестирование генерации случайных чисел" << endl;
-        cout << "----------------------------------------" << endl;
         cout << "   - Одиночное случайное число: " << dist_analysis.randNum() << endl;
-
         cout << "   - Вектор из 5 значений [Запуск 1]: ";
         for (int i = 0; i < 5; i++) {
             cout << dist_analysis.randNum() << " ";
         }
         cout << endl;
 
-        // Проверка воспроизводимости (нужно сбросить генератор для демонстрации)
-        cout << "   >>> ПОДТВЕРЖДЕНО: Генерация работает!" << endl;
+        // Проверка воспроизводимости
+        cout << "Генерация работает." << endl;
 
         // 5. Тестирование обработки исключений
         cout << "\n5. Тестирование обработки исключений" << endl;
-        cout << "------------------------------------" << endl;
 
         // 5.1. Исключение для scale <= 0 в конструкторе
         try {
@@ -479,7 +473,7 @@ void complete_primary_class_test() {
         // 5.2. Исключение для form <= 0 в конструкторе
         try {
             Primary invalid_form(-1.0, 1.0, 0.0);
-            cout << "   - ОШИБКА: Не сгенерировано исключение для form <= 0!" << endl;
+            cout << "   - ОШИБКА: Не сгенерировано исключение для form <= 0" << endl;
         }
         catch (const std::invalid_argument& e) {
             cout << "   - Успех: перехвачено исключение для form <= 0: " << e.what() << endl;
@@ -489,7 +483,7 @@ void complete_primary_class_test() {
         try {
             Primary test_obj(1.0, 1.0, 0.0);
             test_obj.setScale(-1.0);
-            cout << "   - ОШИБКА: Не сгенерировано исключение в setScale!" << endl;
+            cout << "   - ОШИБКА: Не сгенерировано исключение в setScale" << endl;
         }
         catch (const std::invalid_argument& e) {
             cout << "   - Успех (setScale): " << e.what() << endl;
@@ -499,7 +493,7 @@ void complete_primary_class_test() {
         try {
             Primary test_obj(1.0, 1.0, 0.0);
             test_obj.setForm(-1.0);
-            cout << "   - ОШИБКА: Не сгенерировано исключение в setForm!" << endl;
+            cout << "   - ОШИБКА: Не сгенерировано исключение в setForm" << endl;
         }
         catch (const std::invalid_argument& e) {
             cout << "   - Успех (setForm): " << e.what() << endl;
@@ -515,7 +509,7 @@ void complete_primary_class_test() {
             ifstream badInFile("bad_params.txt");
             Primary bad_dist(badInFile);
             badInFile.close();
-            cout << "   - ОШИБКА: Не сгенерировано исключение при загрузке!" << endl;
+            cout << "   - ОШИБКА: Не сгенерировано исключение при загрузке" << endl;
         }
         catch (const std::invalid_argument& e) {
             cout << "   - Успех (загрузка): " << e.what() << endl;
@@ -523,7 +517,6 @@ void complete_primary_class_test() {
 
         // 6. Тестирование персистентности
         cout << "\n6. Тестирование персистентности" << endl;
-        cout << "-------------------------------" << endl;
 
         Primary original(2.0, 1.5, 1.0);
 
@@ -532,26 +525,26 @@ void complete_primary_class_test() {
         original.save(saveFile);
         saveFile.close();
         cout << "   - Объект сохранен: v=" << original.getForm()
-            << ", λ=" << original.getScale() << ", μ=" << original.getShift() << endl;
+            << ", lambda=" << original.getScale() << ", mu=" << original.getShift() << endl;
 
         // Загружаем
         ifstream loadFile("persistence_test.txt");
         Primary loaded(loadFile);
         loadFile.close();
         cout << "   - Объект загружен: v=" << loaded.getForm()
-            << ", λ=" << loaded.getScale() << ", μ=" << loaded.getShift() << endl;
+            << ", lambda=" << loaded.getScale() << ", mu=" << loaded.getShift() << endl;
 
         // Проверяем совпадение
         if (original.getForm() == loaded.getForm() &&
             original.getScale() == loaded.getScale() &&
             original.getShift() == loaded.getShift()) {
-            cout << "   >>> ПОДТВЕРЖДЕНО: Персистентность работает корректно!" << endl;
+            cout << " Персистентность работает корректно" << endl;
         }
         else {
-            cout << "   >>> ОШИБКА: Данные не совпадают после загрузки!" << endl;
+            cout << " Данные не совпадают после загрузки" << endl;
         }
 
-        cout << "\n=== ПОЛНОЕ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО ===" << endl;
+        cout << "\n ПОЛНОЕ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО" << endl;
 
     }
     catch (const exception& e) {
@@ -559,14 +552,13 @@ void complete_primary_class_test() {
     }
 }
 
-// === ТЕСТИРОВАНИЕ КЛАССА MIXTURE ===
+// ТЕСТИРОВАНИЕ MIXTURE
 void test_mixture_class() {
-    cout << "\n=== Тестирование класса Mixture ===" << endl;
+    cout << "\n Тестирование класса Mixture" << endl;
 
     try {
         // 1. Тестирование конструкторов
         cout << "1. Тестирование конструкторов:" << endl;
-        cout << "--------------------------------" << endl;
 
         Primary prim1(1.0, 1.0, 0.0);  // SEN(0,1,1)
         Primary prim2(1.0, 2.0, 3.0);  // SEN(3,2,1)
@@ -575,11 +567,11 @@ void test_mixture_class() {
         Mixture mixture(prim1, prim2, 0.7);
         cout << "   - Создана смесь с параметром p = " << mixture.getP() << endl;
         cout << "   - Компонент 1: v=" << mixture.component1().getForm()
-            << ", λ=" << mixture.component1().getScale()
-            << ", μ=" << mixture.component1().getShift() << endl;
+            << ", lambda=" << mixture.component1().getScale()
+            << ", mu=" << mixture.component1().getShift() << endl;
         cout << "   - Компонент 2: v=" << mixture.component2().getForm()
-            << ", λ=" << mixture.component2().getScale()
-            << ", μ=" << mixture.component2().getShift() << endl;
+            << ", lambda=" << mixture.component2().getScale()
+            << ", mu =" << mixture.component2().getShift() << endl;
 
         // Конструктор из файла
         ofstream outFile("mixture_test.txt");
@@ -593,13 +585,11 @@ void test_mixture_class() {
 
         // 2. Тестирование set-функций
         cout << "\n2. Тестирование set-функций:" << endl;
-        cout << "----------------------------" << endl;
         mixture.setP(0.3);
         cout << "   - Новый параметр p = " << mixture.getP() << " (был 0.7)" << endl;
 
         // 3. Тестирование плотности
         cout << "\n3. Тестирование плотности:" << endl;
-        cout << "--------------------------" << endl;
         double pdf_val = mixture.pdf(2.0);
         cout << "   - Плотность в точке x=2.0: " << pdf_val << endl;
 
@@ -611,7 +601,6 @@ void test_mixture_class() {
 
         // 4. Тестирование моментов
         cout << "\n4. Тестирование моментов:" << endl;
-        cout << "-------------------------" << endl;
         double mean, variance, skewness, kurtosis;
         mixture.moments(&mean, &variance, &skewness, &kurtosis);
         cout << "   - Математическое ожидание (Mξ) = " << mean << endl;
@@ -621,7 +610,6 @@ void test_mixture_class() {
 
         // 5. Тестирование генерации
         cout << "\n5. Тестирование генерации:" << endl;
-        cout << "--------------------------" << endl;
         cout << "   - Одиночное значение: " << mixture.randNum() << endl;
         cout << "   - Вектор из 5 значений: ";
         for (int i = 0; i < 5; i++) {
@@ -631,10 +619,9 @@ void test_mixture_class() {
 
         // 6. Тестирование исключений
         cout << "\n6. Тестирование исключений:" << endl;
-        cout << "---------------------------" << endl;
         try {
             Mixture invalid_mixture(prim1, prim2, 1.5); // p > 1
-            cout << "   - ОШИБКА: Не сгенерировано исключение для p > 1!" << endl;
+            cout << "   - ОШИБКА: Не сгенерировано исключение для p > 1" << endl;
         }
         catch (const exception& e) {
             cout << "   - Успех: перехвачено исключение для p > 1: " << e.what() << endl;
@@ -642,7 +629,7 @@ void test_mixture_class() {
 
         try {
             mixture.setP(-0.5); // p < 0
-            cout << "   - ОШИБКА: Не сгенерировано исключение в setP!" << endl;
+            cout << "   - ОШИБКА: Не сгенерировано исключение в setP" << endl;
         }
         catch (const exception& e) {
             cout << "   - Успех (setP): " << e.what() << endl;
@@ -656,14 +643,13 @@ void test_mixture_class() {
     }
 }
 
-// === ТЕСТИРОВАНИЕ КЛАССА EMPIRIC ===
+// ТЕСТИРОВАНИЕ КЛАССА EMPIRIC
 void test_empiric_class() {
-    cout << "\n=== Тестирование класса Empiric ===" << endl;
+    cout << "\n Тестирование класса Empiric " << endl;
 
     try {
         // 1. Тестирование конструкторов
         cout << "1. Тестирование конструкторов:" << endl;
-        cout << "--------------------------------" << endl;
 
         Primary source_prim(1.0, 1.0, 0.0); // SEN(0,1,1)
         Primary prim2(1.0, 2.0, 1.0);
@@ -686,7 +672,6 @@ void test_empiric_class() {
 
         // 2. Тестирование диапазонов данных
         cout << "\n2. Тестирование диапазонов данных:" << endl;
-        cout << "----------------------------------" << endl;
         cout << "   - Empiric из Primary: [" << empiric_from_prim.getMin()
             << ", " << empiric_from_prim.getMax() << "]" << endl;
         cout << "   - Empiric из Mixture: [" << empiric_from_mixture.getMin()
@@ -694,7 +679,6 @@ void test_empiric_class() {
 
         // 3. Тестирование плотности
         cout << "\n3. Тестирование плотности:" << endl;
-        cout << "--------------------------" << endl;
         double pdf_prim = empiric_from_prim.pdf(0.0);
         double pdf_mixture = empiric_from_mixture.pdf(1.0);
         cout << "   - Плотность Empiric(Primary) в x=0.0: " << pdf_prim << endl;
@@ -702,7 +686,6 @@ void test_empiric_class() {
 
         // 4. Тестирование моментов
         cout << "\n4. Тестирование моментов:" << endl;
-        cout << "-------------------------" << endl;
         double mean_prim, var_prim, skew_prim, kurt_prim;
         double mean_mix, var_mix, skew_mix, kurt_mix;
 
@@ -710,13 +693,12 @@ void test_empiric_class() {
         empiric_from_mixture.moments(&mean_mix, &var_mix, &skew_mix, &kurt_mix);
 
         cout << "   - Empiric(Primary): M=" << mean_prim << ", D=" << var_prim
-            << ", γ₁=" << skew_prim << ", γ₂=" << kurt_prim << endl;
+            << ", сим=" << skew_prim << ", экс=" << kurt_prim << endl;
         cout << "   - Empiric(Mixture): M=" << mean_mix << ", D=" << var_mix
-            << ", γ₁=" << skew_mix << ", γ₂=" << kurt_mix << endl;
+            << ", сим=" << skew_mix << ", экс=" << kurt_mix << endl;
 
         // 5. Тестирование генерации
         cout << "\n5. Тестирование генерации:" << endl;
-        cout << "--------------------------" << endl;
         cout << "   - Empiric(Primary): ";
         for (int i = 0; i < 3; i++) {
             cout << empiric_from_prim.randNum() << " ";
@@ -730,7 +712,6 @@ void test_empiric_class() {
 
         // 6. Тестирование глубокого копирования
         cout << "\n6. Тестирование глубокого копирования:" << endl;
-        cout << "-------------------------------------" << endl;
 
         // Конструктор копирования
         Empiric copy_constructed(empiric_from_prim);
@@ -750,15 +731,14 @@ void test_empiric_class() {
             << ", copy.pdf(0)=" << copy_pdf << endl;
 
         if (abs(original_pdf - copy_pdf) < 1e-10) {
-            cout << "   >>> ПОДТВЕРЖДЕНО: Копирование работает корректно!" << endl;
+            cout << "Копирование работает корректно!" << endl;
         }
         else {
-            cout << "   >>> ОШИБКА: Данные не совпадают после копирования!" << endl;
+            cout << "Данные не совпадают после копирования!" << endl;
         }
 
         // 7. Тестирование исключений
         cout << "\n7. Тестирование исключений:" << endl;
-        cout << "---------------------------" << endl;
         try {
             Empiric invalid_empiric(1, source_prim, 10); // n=1
             cout << "   - ОШИБКА: Не сгенерировано исключение для n=1!" << endl;
@@ -767,7 +747,7 @@ void test_empiric_class() {
             cout << "   - Успех: перехвачено исключение для n=1: " << e.what() << endl;
         }
 
-        cout << "\n✓ Тест класса Empiric выполнен успешно!" << endl;
+        cout << "\nТест класса Empiric выполнен успешно" << endl;
 
     }
     catch (const exception& e) {
@@ -775,7 +755,8 @@ void test_empiric_class() {
     }
 }
 
-// === ДЕМОНСТРАЦИЯ ОТНОШЕНИЙ МЕЖДУ ОБЪЕКТАМИ ===
+//  ДЕМОНСТРАЦИЯ ОТНОШЕНИЙ МЕЖДУ ОБЪЕКТАМИ
+/*
 void demonstrate_objects_relationships() {
     cout << "\n=== Демонстрация отношений между объектами ===" << endl;
 
@@ -844,7 +825,6 @@ void demonstrate_objects_relationships() {
 
         // 5. Демонстрация работы с разными типами распределений
         cout << "\n5. РАБОТА С РАЗНЫМИ ТИПАМИ РАСПРЕДЕЛЕНИЙ:" << endl;
-        cout << "========================================" << endl;
 
         cout << "   - Primary SEN(0,1,1):" << endl;
         cout << "     M=" << comp1.getShift() << ", λ=" << comp1.getScale()
@@ -859,7 +839,7 @@ void demonstrate_objects_relationships() {
         empiric_prim.moments(&mean, &variance, &skewness, &kurtosis);
         cout << "     Mξ=" << mean << ", Dξ=" << variance << endl;
 
-        cout << "\n✓ Демонстрация отношений между объектами завершена!" << endl;
+        cout << "\nДемонстрация отношений между объектами завершена!" << endl;
         cout << "Все типы отношений успешно реализованы:" << endl;
         cout << "  - Композиция (целое-часть)" << endl;
         cout << "  - Клиент-серверные отношения" << endl;
@@ -871,7 +851,7 @@ void demonstrate_objects_relationships() {
         cerr << "Ошибка при демонстрации отношений: " << e.what() << endl;
     }
 }
-
+*/
 // ГЛАВНАЯ ФУНКЦИЯ
 int main() {
     setlocale(LC_ALL, "Russian");
@@ -887,7 +867,7 @@ int main() {
         cout << "5 - Тестирование класса Primary" << endl;
         cout << "6 - Тестирование класса Mixture" << endl;
         cout << "7 - Тестирование класса Empiric" << endl;
-        cout << "8 - Демонстрация отношений между объектами" << endl;
+        //cout << "8 - Демонстрация отношений между объектами" << endl;
         cout << "0 - Выход" << endl;
         cout << "Выберите операцию: ";
         cin >> choice;
@@ -919,9 +899,9 @@ int main() {
         case 7:
             test_empiric_class();
             break;
-        case 8:
+       /* case 8:
             demonstrate_objects_relationships();
-            break;
+            break;*/
         case 0:
             cout << "Выход из программы..." << endl;
             break;
