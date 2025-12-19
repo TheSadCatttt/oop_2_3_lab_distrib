@@ -1,4 +1,6 @@
-﻿#include "Primary.h"
+﻿cpp oop_first_lab_var_3\primary.cpp
+#include "Primary.h"
+#include "distributions.h"
 #include <stdexcept>
 
 #ifndef M_PI
@@ -8,13 +10,12 @@
 // Файловый глобальный сид для объектов Primary (0 — означает использовать random_device)
 static unsigned int primary_seed = 0;
 
-
 // Конструктор с параметрами по умолчанию
 Primary::Primary(double form, double scale, double shift)
     : mu(shift),
-      lambda(scale > 0 ? scale : throw std::invalid_argument("Scale must be positive")),
-      v(form > 0 ? form : throw std::invalid_argument("Form parameter must be positive")),
-      gen(primary_seed ? primary_seed : std::random_device{}()), unif(0.0, 1.0) {
+    lambda(scale > 0 ? scale : throw std::invalid_argument("Scale must be positive")),
+    v(form > 0 ? form : throw std::invalid_argument("Form parameter must be positive")),
+    gen(primary_seed ? primary_seed : std::random_device{}()), unif(0.0, 1.0) {
 }
 
 // Конструктор из потока
@@ -28,8 +29,7 @@ void Primary::setGlobalSeed(unsigned int seed) {
     primary_seed = seed;
 }
 
-
-    // Set-функции
+// Set-функции
 void Primary::setShift(double newShift) {
     mu = newShift;
 }
@@ -107,9 +107,8 @@ void Primary::moments(double* mean, double* variance, double* skewness, double* 
     *kurtosis = base_kurtosis;
 }
 
-// Генерация стандартной SEN величины
+// Генерация стандартной SEN величины (оставляем на случай использования)
 double Primary::generate_sen_standard(double v) const {
-    // Шаг 1: Генерация стандартной нормальной величины (Бокс-Мюллер)
     double r1, r2;
     do {
         r1 = unif(gen);
@@ -118,7 +117,6 @@ double Primary::generate_sen_standard(double v) const {
 
     double z = sqrt(-2.0 * log(r1)) * cos(2.0 * M_PI * r2);
 
-    // Шаг 2: Генерация случайной величины τ
     double r0;
     do {
         r0 = unif(gen);
@@ -126,14 +124,13 @@ double Primary::generate_sen_standard(double v) const {
 
     double tau = 1.0 - (1.0 / v) * log(r0);
 
-    // SEN стандартная величина
     return z / sqrt(tau);
 }
 
 // Генерация случайной величины
+// Делегируем генерацию функционалу, чтобы использовать его статический генератор
 double Primary::randNum() const {
-    double sen_standard = generate_sen_standard(v);
-    return mu + lambda * sen_standard;
+    return generate_main(mu, lambda, v);
 }
 
 // Сохранение в поток

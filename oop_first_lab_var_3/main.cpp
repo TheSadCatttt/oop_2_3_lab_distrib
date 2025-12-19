@@ -14,7 +14,7 @@ using namespace std;
 const int DEFAULT_SEN_SAMPLE_SIZE = 10000;
 const int DEFAULT_MIXTURE_SAMPLE_SIZE = 10000;
 const int EMPIRICAL_SIZES[] = { 100, 1000, 10000 };
-const unsigned int COMPARISON_SEED = 1488;
+const unsigned int COMPARISON_SEED = 864222;
 
 // ОБЪЯВЛЕНИЯ ФУНКЦИЙ
 void input_sample_sizes(int& sen_size, int& mix_size, int empirical_sizes[]);
