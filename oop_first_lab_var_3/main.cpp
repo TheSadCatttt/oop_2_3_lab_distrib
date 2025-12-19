@@ -14,10 +14,11 @@ using namespace std;
 const int DEFAULT_SEN_SAMPLE_SIZE = 10000;
 const int DEFAULT_MIXTURE_SAMPLE_SIZE = 10000;
 const int EMPIRICAL_SIZES[] = { 100, 1000, 10000 };
+const unsigned int COMPARISON_SEED = 12345;
 
 // ОБЪЯВЛЕНИЯ ФУНКЦИЙ
 void input_sample_sizes(int& sen_size, int& mix_size, int empirical_sizes[]);
-void test_emяяpirical_distribution();
+void test_empirical_distribution();
 void generate_all_plot_data(int sen_size, int mix_size, int empirical_sizes[]);
 void generate_all_plot_data();
 void test_primary_class_menu();
@@ -111,7 +112,7 @@ void test_empirical_distribution() {
 
 // ГЕНЕРАЦИЯ ДАННЫХ ДЛЯ ПОСТРОЕНИЯ ГРАФИКОВ
 void generate_all_plot_data(int sen_size, int mix_size, int empirical_sizes[]) {
-    cout << "\n=== Генерация данных для построения графиков ===" << endl;
+    cout << "\nГенерация данных для построения графиков" << endl;
 
     cout << "Используемые размеры выборок:" << endl;
     cout << "  SEN распределения: " << sen_size << " элементов" << endl;
@@ -212,21 +213,48 @@ void generate_all_plot_data(int sen_size, int mix_size, int empirical_sizes[]) {
     file_mixture_class << "x,pdf_class,pdf_function,moment,class_value,function_value,class_samples,function_samples,mixture_type\n";
 
     // Параметры для тестирования смеси
-    Primary prim1_mix(1.0, 1.0, 0.0);  // SEN(0,1,1)
-    Primary prim2_mix(2.0, 2.0, 1.0); // SEN(2,2,1)
+    // SEN(0,1,1): μ=0, λ=1, v=1
+    Primary prim1_mix(1.0, 1.0, 0.0);  // form=v=1.0, scale=λ=1.0, shift=μ=0.0 ✓
+
+    // SEN(2,2,1): μ=2, λ=2, v=1  
+    Primary prim2_mix(1.0, 2.0, 2.0);  // form=v=1.0, scale=λ=2.0, shift=μ=2.0 ✓
+
     Mixture mixture_class(prim1_mix, prim2_mix, 0.5);
 
     // Создаем параметры для функционального подхода
-    MixtureParams mix_params = { 0.0, 1.0, 1.0, 2.0, 2.0, 1.0, 0.5 };
+    // MixtureParams: {mu1, lambda1, v1, mu2, lambda2, v2, p}
+    MixtureParams mix_params = { 0.0, 1.0, 1.0, 2.0, 2.0, 1.0, 0.5 };  // ✓
+
+    // ДИАГНОСТИКА: выведем параметры для проверки
+    cout << "   Параметры компонентов:" << endl;
+    cout << "     Компонент 1 (класс): μ=" << prim1_mix.getShift()
+        << ", λ=" << prim1_mix.getScale()
+        << ", v=" << prim1_mix.getForm() << endl;
+    cout << "     Компонент 2 (класс): μ=" << prim2_mix.getShift()
+        << ", λ=" << prim2_mix.getScale()
+        << ", v=" << prim2_mix.getForm() << endl;
+    cout << "     Компонент 1 (функция): μ=" << mix_params.mu1
+        << ", λ=" << mix_params.lambda1
+        << ", v=" << mix_params.v1 << endl;
+    cout << "     Компонент 2 (функция): μ=" << mix_params.mu2
+        << ", λ=" << mix_params.lambda2
+        << ", v=" << mix_params.v2 << endl;
 
     // Генерация данных для плотностей
     for (double x = -4.0; x <= 8.0; x += 0.08) {
         double pdf_class_val = mixture_class.pdf(x);
         double pdf_function_val = pdf_mixture(x, &mix_params);
 
-        file_mixture_class << x << "," << pdf_class_val << "," << pdf_function_val << ",,,,," << "trivial" << "\n";
-    }
+        // Дополнительная диагностика в нескольких точках
+        if (fabs(x - 0.0) < 0.01 || fabs(x - 2.0) < 0.01 || fabs(x - 4.0) < 0.01) {
+            cout << "     x=" << x << ": класс=" << pdf_class_val
+                << ", функция=" << pdf_function_val
+                << ", разница=" << fabs(pdf_class_val - pdf_function_val) << endl;
+        }
 
+        file_mixture_class << x << "," << pdf_class_val << "," << pdf_function_val
+            << ",,,,," << "trivial" << "\n";
+    }
     // Данные для моментов
     double class_mean_mix, class_var_mix, class_skew_mix, class_kurt_mix;
     double func_mean_mix, func_var_mix, func_skew_mix, func_kurt_mix;
@@ -309,7 +337,7 @@ void generate_all_plot_data(int sen_size, int mix_size, int empirical_sizes[]) {
 
     // Генерация данных для плотностей
     for (double x = -4.0; x <= 4.0; x += 0.04) {
-        Primary prim_class(1.0, 2.0, 1.0); //тут менять в, лямбду, мю изначально было 0 1 1
+        Primary prim_class(1.0, 2.0, 1.0);   //тут менять в, лямбду, мю изначально было 0 1 1
         double pdf_class = prim_class.pdf(x);
         double pdf_function = pdf_main(x, 1.0, 2.0, 1.0); //тут менять мю, лямбду, в
 
@@ -330,6 +358,7 @@ void generate_all_plot_data(int sen_size, int mix_size, int empirical_sizes[]) {
     file_primary << ",,,Эксцесс," << class_kurt << "," << func_kurt << ",,\n";
 
     // Генерация случайных величин
+    set_main_seed(COMPARISON_SEED);
     Primary prim_gen(1.0, 2.0, 1.0); //тут менять в, лямбду, мю 
     for (int i = 0; i < 1000; i++) {
         double class_sample = prim_gen.randNum();

@@ -216,7 +216,17 @@ def create_mixture_class_plots():
         # Загрузка данных класса Mixture
         df_mixture = safe_read_csv('data_mixture_class.csv')
         print(f"Успешно загружено {len(df_mixture)} строк")
+        print(f"Колонки: {df_mixture.columns.tolist()}")
         
+        # Посмотрим на структуру данных
+        print("\nПервые 5 строк:")
+        print(df_mixture.head())
+        print("\nРазличные типы в mixture_type:")
+        if 'mixture_type' in df_mixture.columns:
+            print(df_mixture['mixture_type'].unique())
+        else:
+            print("Колонка 'mixture_type' не найдена!")
+            
     except Exception as e:
         print(f"❌ Ошибка загрузки данных класса Mixture: {e}")
         print("Генерирую демонстрационные данные...")
@@ -230,147 +240,141 @@ def create_mixture_class_plots():
     
     try:
         # --- Сравнение плотностей ---
-        if 'x' in df_mixture.columns and 'pdf_class' in df_mixture.columns and 'pdf_function' in df_mixture.columns:
-            # Фильтруем только строки с плотностями
-            pdf_data = df_mixture[df_mixture['mixture_type'] == 'trivial'][['x', 'pdf_class', 'pdf_function']].dropna()
-            if not pdf_data.empty:
-                axes[0,0].plot(pdf_data['x'], pdf_data['pdf_class'], 'b-', linewidth=2.5, 
-                               label='Класс Mixture')
-                axes[0,0].plot(pdf_data['x'], pdf_data['pdf_function'], 'r--', linewidth=2, 
-                               label='Функция pdf_mixture')
-                axes[0,0].set_title('Сравнение плотностей смеси распределений\nSEN(0,1,1) + SEN(2,2,1), p=0.5', 
-                                    fontweight='bold', fontsize=12)
-                axes[0,0].set_xlabel('x')
-                axes[0,0].set_ylabel('Плотность вероятности')
-                axes[0,0].legend()
-                axes[0,0].grid(True, alpha=0.3)
-                axes[0,0].set_xlim(-4, 8)
-            else:
-                # Пробуем найти данные без фильтра
-                pdf_data = df_mixture[['x', 'pdf_class', 'pdf_function']].dropna()
-                if not pdf_data.empty:
-                    axes[0,0].plot(pdf_data['x'], pdf_data['pdf_class'], 'b-', linewidth=2.5, 
-                                   label='Класс Mixture')
-                    axes[0,0].plot(pdf_data['x'], pdf_data['pdf_function'], 'r--', linewidth=2, 
-                                   label='Функция pdf_mixture')
-                    axes[0,0].set_title('Сравнение плотностей смеси распределений', 
-                                        fontweight='bold', fontsize=12)
-                    axes[0,0].set_xlabel('x')
-                    axes[0,0].set_ylabel('Плотность вероятности')
-                    axes[0,0].legend()
-                    axes[0,0].grid(True, alpha=0.3)
-                else:
-                    axes[0,0].text(0.5, 0.5, 'Данные плотностей\nне найдены', 
-                                  ha='center', va='center', transform=axes[0,0].transAxes)
-                    axes[0,0].set_title('Сравнение плотностей', fontweight='bold', fontsize=12)
+        # Фильтруем строки с числовыми значениями x (теоретические плотности)
+        pdf_mask = df_mixture['x'].notna() & df_mixture['pdf_class'].notna() & df_mixture['pdf_function'].notna()
+        pdf_data = df_mixture[pdf_mask].copy()
+        
+        if len(pdf_data) > 0:
+            # Сортируем по x для правильного построения графиков
+            pdf_data = pdf_data.sort_values('x')
+            
+            axes[0,0].plot(pdf_data['x'], pdf_data['pdf_class'], 'b-', linewidth=2.5, 
+                           label='Класс Mixture')
+            axes[0,0].plot(pdf_data['x'], pdf_data['pdf_function'], 'r--', linewidth=2, 
+                           label='Функция pdf_mixture')
+            axes[0,0].set_title('Сравнение плотностей смеси распределений\nSEN(0,1,1) + SEN(2,2,1), p=0.5', 
+                                fontweight='bold', fontsize=12)
+            axes[0,0].set_xlabel('x')
+            axes[0,0].set_ylabel('Плотность вероятности')
+            axes[0,0].legend()
+            axes[0,0].grid(True, alpha=0.3)
+            axes[0,0].set_xlim(pdf_data['x'].min(), pdf_data['x'].max())
         else:
             axes[0,0].text(0.5, 0.5, 'Данные плотностей\nне найдены', 
                           ha='center', va='center', transform=axes[0,0].transAxes)
             axes[0,0].set_title('Сравнение плотностей', fontweight='bold', fontsize=12)
         
         # --- Сравнение моментов ---
-        if 'moment' in df_mixture.columns:
-            # Фильтруем строки с моментами
-            moments_data = df_mixture[df_mixture['mixture_type'] == 'moments'][['moment', 'class_value', 'function_value']].dropna()
-            if not moments_data.empty:
-                x_pos = np.arange(len(moments_data))
-                width = 0.35
-                
-                bars1 = axes[0,1].bar(x_pos - width/2, moments_data['class_value'], width, 
-                                     label='Класс Mixture', alpha=0.7, color='blue')
-                bars2 = axes[0,1].bar(x_pos + width/2, moments_data['function_value'], width, 
-                                     label='Функция moments_mixture', alpha=0.7, color='red')
-                
-                axes[0,1].set_title('Сравнение моментов смеси распределений', fontweight='bold', fontsize=12)
-                axes[0,1].set_xlabel('Момент')
-                axes[0,1].set_ylabel('Значение')
-                axes[0,1].set_xticks(x_pos)
-                axes[0,1].set_xticklabels(moments_data['moment'], rotation=45)
-                axes[0,1].legend()
-                axes[0,1].grid(True, alpha=0.3, axis='y')
-                
-                # Добавление значений на столбцы
-                for bar, value in zip(bars1, moments_data['class_value']):
-                    axes[0,1].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
-                                  f'{value:.3f}', ha='center', va='bottom', fontsize=8)
-                
-                for bar, value in zip(bars2, moments_data['function_value']):
-                    axes[0,1].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
-                                  f'{value:.3f}', ha='center', va='bottom', fontsize=8)
+        # Находим строки с моментами (где есть class_value и function_value)
+        moments_mask = df_mixture['class_value'].notna() & df_mixture['function_value'].notna()
+        moments_data = df_mixture[moments_mask].copy()
+        
+        if len(moments_data) > 0:
+            # Берем соответствующие названия моментов из колонки 'moment'
+            if 'moment' in moments_data.columns:
+                moment_names = moments_data['moment'].tolist()
             else:
-                # Пробуем найти данные без фильтра
-                moments_data = df_mixture[['moment', 'class_value', 'function_value']].dropna()
-                if not moments_data.empty:
-                    x_pos = np.arange(len(moments_data))
-                    width = 0.35
-                    
-                    bars1 = axes[0,1].bar(x_pos - width/2, moments_data['class_value'], width, 
-                                         label='Класс Mixture', alpha=0.7, color='blue')
-                    bars2 = axes[0,1].bar(x_pos + width/2, moments_data['function_value'], width, 
-                                         label='Функция moments_mixture', alpha=0.7, color='red')
-                    
-                    axes[0,1].set_title('Сравнение моментов смеси распределений', fontweight='bold', fontsize=12)
-                    axes[0,1].set_xlabel('Момент')
-                    axes[0,1].set_ylabel('Значение')
-                    axes[0,1].set_xticks(x_pos)
-                    axes[0,1].set_xticklabels(moments_data['moment'], rotation=45)
-                    axes[0,1].legend()
-                    axes[0,1].grid(True, alpha=0.3, axis='y')
-                else:
-                    axes[0,1].text(0.5, 0.5, 'Данные моментов\nне найдены', 
-                                  ha='center', va='center', transform=axes[0,1].transAxes)
-                    axes[0,1].set_title('Сравнение моментов', fontweight='bold', fontsize=12)
+                # Если нет колонки moment, создаем стандартные названия
+                moment_names = [f'Момент {i+1}' for i in range(len(moments_data))]
+            
+            x_pos = np.arange(len(moment_names))
+            width = 0.35
+            
+            bars1 = axes[0,1].bar(x_pos - width/2, moments_data['class_value'].values, width, 
+                                 label='Класс Mixture', alpha=0.7, color='blue')
+            bars2 = axes[0,1].bar(x_pos + width/2, moments_data['function_value'].values, width, 
+                                 label='Функция moments_mixture', alpha=0.7, color='red')
+            
+            axes[0,1].set_title('Сравнение моментов смеси распределений', fontweight='bold', fontsize=12)
+            axes[0,1].set_xlabel('Момент')
+            axes[0,1].set_ylabel('Значение')
+            axes[0,1].set_xticks(x_pos)
+            
+            # Обрезаем длинные названия
+            short_names = [name[:15] + '...' if len(str(name)) > 15 else str(name) 
+                          for name in moment_names]
+            axes[0,1].set_xticklabels(short_names, rotation=45, ha='right')
+            axes[0,1].legend()
+            axes[0,1].grid(True, alpha=0.3, axis='y')
+            
+            # Добавление значений на столбцы
+            for bar, value in zip(bars1, moments_data['class_value'].values):
+                if not pd.isna(value):
+                    axes[0,1].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
+                                  f'{value:.3f}', ha='center', va='bottom', fontsize=8)
+            
+            for bar, value in zip(bars2, moments_data['function_value'].values):
+                if not pd.isna(value):
+                    axes[0,1].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
+                                  f'{value:.3f}', ha='center', va='bottom', fontsize=8)
         else:
             axes[0,1].text(0.5, 0.5, 'Данные моментов\nне найдены', 
                           ha='center', va='center', transform=axes[0,1].transAxes)
             axes[0,1].set_title('Сравнение моментов', fontweight='bold', fontsize=12)
         
         # --- Сравнение гистограмм генерации ---
-        if 'class_samples' in df_mixture.columns and 'function_samples' in df_mixture.columns:
-            # Фильтруем строки с выборками
-            samples_data = df_mixture[df_mixture['mixture_type'] == 'samples'][['class_samples', 'function_samples']].dropna()
-            if len(samples_data) > 0:
-                class_samples = samples_data['class_samples']
-                function_samples = samples_data['function_samples']
+        # Фильтруем строки с выборками
+        samples_mask = df_mixture['class_samples'].notna() & df_mixture['function_samples'].notna()
+        samples_data = df_mixture[samples_mask].copy()
+        
+        if len(samples_data) > 0:
+            class_samples = samples_data['class_samples'].dropna()
+            function_samples = samples_data['function_samples'].dropna()
+            
+            # Проверяем, что данные числовые
+            class_samples_numeric = pd.to_numeric(class_samples, errors='coerce')
+            function_samples_numeric = pd.to_numeric(function_samples, errors='coerce')
+            
+            # Удаляем NaN значения
+            class_samples_clean = class_samples_numeric.dropna()
+            function_samples_clean = function_samples_numeric.dropna()
+            
+            if len(class_samples_clean) > 10 and len(function_samples_clean) > 10:
+                # Автоматическое определение границ гистограммы
+                all_samples = pd.concat([class_samples_clean, function_samples_clean])
+                x_min, x_max = all_samples.min(), all_samples.max()
+                bins = min(50, int(np.sqrt(len(all_samples))))
                 
-                axes[1,0].hist(class_samples, bins=50, density=True, 
+                axes[1,0].hist(class_samples_clean, bins=bins, density=True, 
                                alpha=0.6, color='blue', label='Класс Mixture', 
-                               edgecolor='black', linewidth=0.5)
-                axes[1,0].hist(function_samples, bins=50, density=True, 
+                               edgecolor='black', linewidth=0.5, range=(x_min, x_max))
+                axes[1,0].hist(function_samples_clean, bins=bins, density=True, 
                                alpha=0.6, color='red', label='Функция generate_mixture', 
-                               edgecolor='black', linewidth=0.5)
-                axes[1,0].set_title(f'Сравнение гистограмм сгенерированных данных\n(класс: {len(class_samples)}, функция: {len(function_samples)})', 
+                               edgecolor='black', linewidth=0.5, range=(x_min, x_max))
+                axes[1,0].set_title(f'Сравнение гистограмм сгенерированных данных\n(класс: {len(class_samples_clean)}, функция: {len(function_samples_clean)})', 
                                     fontweight='bold', fontsize=12)
                 axes[1,0].set_xlabel('x')
                 axes[1,0].set_ylabel('Плотность вероятности')
                 axes[1,0].legend()
                 axes[1,0].grid(True, alpha=0.3)
-                axes[1,0].set_xlim(-4, 8)
                 
                 # --- Статистические тесты ---
                 try:
                     # Тест Колмогорова-Смирнова
-                    ks_stat, ks_pvalue = stats.ks_2samp(class_samples, function_samples)
+                    ks_stat, ks_pvalue = stats.ks_2samp(class_samples_clean, function_samples_clean)
                     
                     # Разности моментов
-                    mean_diff = abs(class_samples.mean() - function_samples.mean())
-                    var_diff = abs(class_samples.var() - function_samples.var())
+                    mean_diff = abs(class_samples_clean.mean() - function_samples_clean.mean())
+                    var_diff = abs(class_samples_clean.var() - function_samples_clean.var())
+                    std_diff = abs(class_samples_clean.std() - function_samples_clean.std())
                     
-                    stats_data = {
-                        'Метрика': ['Тест KS (p-value)', 'Разность средних', 'Разность дисперсий'],
-                        'Значение': [f'{ks_pvalue:.6f}', f'{mean_diff:.6f}', f'{var_diff:.6f}']
-                    }
+                    stats_data = [
+                        ['Тест KS (p-value)', f'{ks_pvalue:.6f}'],
+                        ['Разность средних', f'{mean_diff:.6f}'],
+                        ['Разность дисперсий', f'{var_diff:.6f}'],
+                        ['Разность СКО', f'{std_diff:.6f}']
+                    ]
                     
                     # Таблица статистики
                     axes[1,1].axis('off')
-                    table = axes[1,1].table(cellText=np.array([stats_data['Метрика'], stats_data['Значение']]).T,
+                    table = axes[1,1].table(cellText=stats_data,
                                            colLabels=['Метрика', 'Значение'],
                                            cellLoc='center',
                                            loc='center',
                                            bbox=[0.2, 0.3, 0.6, 0.4])
                     table.auto_set_font_size(False)
                     table.set_fontsize(10)
-                    table.scale(1, 2)
+                    table.scale(1, 1.5)
                     
                     axes[1,1].set_title('Статистическое сравнение методов генерации', 
                                         fontweight='bold', fontsize=12)
@@ -380,6 +384,7 @@ def create_mixture_class_plots():
                     print(f"  Тест Колмогорова-Смирнова: p-value = {ks_pvalue:.6f}")
                     print(f"  Разность средних: {mean_diff:.6f}")
                     print(f"  Разность дисперсий: {var_diff:.6f}")
+                    print(f"  Разность СКО: {std_diff:.6f}")
                     
                     if ks_pvalue > 0.05:
                         print("  ✓ Вывод: распределения статистически неразличимы (класс работает корректно)")
@@ -387,11 +392,12 @@ def create_mixture_class_plots():
                         print("  ⚠ Вывод: обнаружены статистические различия между методами")
                         
                 except Exception as e:
-                    axes[1,1].text(0.5, 0.5, f'Ошибка статистики:\n{e}', 
-                                  ha='center', va='center', transform=axes[1,1].transAxes)
+                    axes[1,1].text(0.5, 0.5, f'Ошибка статистики:\n{str(e)[:50]}...', 
+                                  ha='center', va='center', transform=axes[1,1].transAxes,
+                                  fontsize=10)
                     axes[1,1].set_title('Статистическое сравнение', fontweight='bold', fontsize=12)
             else:
-                axes[1,0].text(0.5, 0.5, 'Недостаточно данных\nдля гистограмм', 
+                axes[1,0].text(0.5, 0.5, f'Недостаточно числовых данных\nдля гистограмм\n({len(class_samples_clean)}, {len(function_samples_clean)})', 
                               ha='center', va='center', transform=axes[1,0].transAxes)
                 axes[1,0].set_title('Сравнение гистограмм', fontweight='bold', fontsize=12)
                 axes[1,1].text(0.5, 0.5, 'Недостаточно данных\nдля статистики', 
@@ -407,13 +413,16 @@ def create_mixture_class_plots():
         
         # Сохранение графика
         plt.tight_layout()
-        plt.savefig('mixture_class_comparison.png', dpi=300, bbox_inches='tight')
+        output_file = 'mixture_class_comparison.png'
+        plt.savefig(output_file, dpi=300, bbox_inches='tight')
         plt.close()
         
-        print("✓ График сравнения класса Mixture сохранен как 'mixture_class_comparison.png'")
+        print(f"\n✓ График сравнения класса Mixture сохранен как '{output_file}'")
         
     except Exception as e:
         print(f"❌ Ошибка при создании графиков класса Mixture: {e}")
+        import traceback
+        traceback.print_exc()
         plt.close('all')
 
 def create_empiric_class_plots():
@@ -607,7 +616,7 @@ def generate_demo_mixture_data():
     np.random.seed(42)
     
     # Данные для плотностей (два нормальных распределения для смеси)
-    x_values = np.linspace(-4, 8, 300)
+    x_values = np.linspace(-4, 8, 200)
     pdf1 = stats.norm.pdf(x_values, 0, 1) * 0.5
     pdf2 = stats.norm.pdf(x_values, 2, 2) * 0.5
     pdf_class = pdf1 + pdf2
@@ -625,27 +634,57 @@ def generate_demo_mixture_data():
             'function_value': np.nan,
             'class_samples': np.nan,
             'function_samples': np.nan,
-            'mixture_type': 'trivial'
+            'mixture_type': np.nan  # Оставляем пустым или заполняем как нужно
         })
     
     # Данные для моментов
     moments_data = [
         {'x': np.nan, 'pdf_class': np.nan, 'pdf_function': np.nan,
          'moment': 'Среднее', 'class_value': 1.0, 'function_value': 1.0,
-         'class_samples': np.nan, 'function_samples': np.nan, 'mixture_type': 'moments'},
+         'class_samples': np.nan, 'function_samples': np.nan, 'mixture_type': np.nan},
         {'x': np.nan, 'pdf_class': np.nan, 'pdf_function': np.nan,
          'moment': 'Дисперсия', 'class_value': 2.25, 'function_value': 2.25,
-         'class_samples': np.nan, 'function_samples': np.nan, 'mixture_type': 'moments'},
+         'class_samples': np.nan, 'function_samples': np.nan, 'mixture_type': np.nan},
         {'x': np.nan, 'pdf_class': np.nan, 'pdf_function': np.nan,
          'moment': 'Асимметрия', 'class_value': 0.3, 'function_value': 0.3,
-         'class_samples': np.nan, 'function_samples': np.nan, 'mixture_type': 'moments'},
+         'class_samples': np.nan, 'function_samples': np.nan, 'mixture_type': np.nan},
         {'x': np.nan, 'pdf_class': np.nan, 'pdf_function': np.nan,
          'moment': 'Эксцесс', 'class_value': -0.5, 'function_value': -0.5,
-         'class_samples': np.nan, 'function_samples': np.nan, 'mixture_type': 'moments'}
+         'class_samples': np.nan, 'function_samples': np.nan, 'mixture_type': np.nan}
     ]
     
     # Данные для сгенерированных выборок
-    # Смесь: 50
+    # Смесь: 50% из N(0,1), 50% из N(2,4)
+    n_samples = 1000
+    choice = np.random.choice([0, 1], size=n_samples, p=[0.5, 0.5])
+    class_samples = np.where(choice == 0, 
+                            np.random.normal(0, 1, n_samples),
+                            np.random.normal(2, 2, n_samples))
+    function_samples = np.where(choice == 0,
+                               np.random.normal(0, 1.01, n_samples),  # Немного отличаем
+                               np.random.normal(2, 2.02, n_samples))
+    
+    sample_rows = []
+    for i in range(n_samples):
+        sample_rows.append({
+            'x': np.nan,
+            'pdf_class': np.nan,
+            'pdf_function': np.nan,
+            'moment': np.nan,
+            'class_value': np.nan,
+            'function_value': np.nan,
+            'class_samples': class_samples[i],
+            'function_samples': function_samples[i],
+            'mixture_type': np.nan
+        })
+    
+    # Объединяем все данные
+    all_data = pdf_rows + moments_data + sample_rows
+    df = pd.DataFrame(all_data)
+    
+    # Сохраняем в CSV с правильной кодировкой
+    df.to_csv('data_mixture_class.csv', index=False, encoding='utf-8')
+    print("✓ Демонстрационные данные сохранены в 'data_mixture_class.csv'")
 
 def generate_demo_empiric_data():
     """Генерация демонстрационных данных для класса Empiric"""

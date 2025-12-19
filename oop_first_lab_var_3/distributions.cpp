@@ -11,6 +11,14 @@
 
 using namespace std;
 
+static unsigned int main_seed = 0;
+static unsigned int mixture_seed = 0;
+static unsigned int empirical_seed = 0;
+
+void set_main_seed(unsigned int seed) { main_seed = seed; }
+void set_mixture_seed(unsigned int seed) { mixture_seed = seed; }
+void set_empirical_seed(unsigned int seed) { empirical_seed = seed; }
+
 // Вспомогательная функция: дополнительная функция ошибок
 double erfcx(double x) {
     return exp(x * x) * erfc(x);
@@ -67,7 +75,7 @@ void moments_main(double mu, double lambda, double v, double* mean,
 // GENERATOR
 double generate_main(double mu, double lambda, double v) {
     static random_device rd;
-    static mt19937 gen(rd());
+    static mt19937 gen(main_seed ? main_seed : random_device{}());
     static uniform_real_distribution<double> unif(0.0, 1.0);
 // Бокс-Мюллер
     double r1, r2;
@@ -137,7 +145,7 @@ void moments_mixture(MixtureParams* params, double* mean, double* variance,
 
 double generate_mixture(MixtureParams* params) {
     static random_device rd;
-    static mt19937 gen(rd());
+    static mt19937 gen(mixture_seed ? mixture_seed : random_device{}());
     static uniform_real_distribution<double> unif(0.0, 1.0);
 
     if (unif(gen) < params->p) {
@@ -223,7 +231,7 @@ void moments_empirical(EmpiricalParams* params, double* mean, double* variance,
 
 double generate_empirical(EmpiricalParams* params) {
     static random_device rd;
-    static mt19937 gen(rd());
+    static mt19937 gen(empirical_seed ? empirical_seed : random_device{}());
     static uniform_real_distribution<double> unif(0.0, 1.0);
 
     // Метод суперпозиции для эмпирического распределения
