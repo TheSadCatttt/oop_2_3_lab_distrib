@@ -138,10 +138,10 @@
     <ClCompile Include="Mixture.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\primary.h" />
     <ClInclude Include="distributions.h" />
     <ClInclude Include="Empiric.h" />
     <ClInclude Include="Mixture.h" />
+    <ClInclude Include="primary.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

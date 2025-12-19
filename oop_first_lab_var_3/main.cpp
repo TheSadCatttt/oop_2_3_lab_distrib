@@ -14,7 +14,7 @@ using namespace std;
 const int DEFAULT_SEN_SAMPLE_SIZE = 10000;
 const int DEFAULT_MIXTURE_SAMPLE_SIZE = 10000;
 const int EMPIRICAL_SIZES[] = { 100, 1000, 10000 };
-const unsigned int COMPARISON_SEED = 12345;
+const unsigned int COMPARISON_SEED = 1488;
 
 // ОБЪЯВЛЕНИЯ ФУНКЦИЙ
 void input_sample_sizes(int& sen_size, int& mix_size, int empirical_sizes[]);
@@ -119,6 +119,12 @@ void generate_all_plot_data(int sen_size, int mix_size, int empirical_sizes[]) {
     cout << "  Смеси распределений: " << mix_size << " элементов" << endl;
     cout << "  Эмпирические распределения: " << empirical_sizes[0] << ", "
         << empirical_sizes[1] << ", " << empirical_sizes[2] << " элементов" << endl;
+
+    // Установить сиды для всех генераторов, чтобы получить воспроизводимые выборки
+    set_main_seed(COMPARISON_SEED);
+    set_mixture_seed(COMPARISON_SEED);
+    set_empirical_seed(COMPARISON_SEED);
+    Primary::setGlobalSeed(COMPARISON_SEED);
 
     // 1. Основные распределения SEN (3.1.1 - 3.1.3)
     cout << "\n1. Генерация данных для основных распределений SEN..." << endl;

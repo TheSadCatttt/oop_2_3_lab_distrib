@@ -22,6 +22,10 @@ public:
     Primary(double form = 1.0, double scale = 1.0, double shift = 0.0);
     Primary(std::istream& in);
 
+    // Глобальная установка сида для всех объектов Primary
+    static void setGlobalSeed(unsigned int seed);
+
+
     // Set-функции
     void setShift(double newShift);
     void setScale(double newScale);

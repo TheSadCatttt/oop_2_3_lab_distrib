@@ -5,17 +5,26 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+// Глобальный сид для объектов Primary (0 — означает random_device)
+static unsigned int primary_seed = 0;
+
 // Конструктор с параметрами по умолчанию
 Primary::Primary(double form, double scale, double shift)
-    : mu(shift), lambda(scale > 0 ? scale : throw std::invalid_argument("Scale must be positive")),
+    : mu(shift),
+    lambda(scale > 0 ? scale : throw std::invalid_argument("Scale must be positive")),
     v(form > 0 ? form : throw std::invalid_argument("Form parameter must be positive")),
-    gen(std::random_device{}()), unif(0.0, 1.0) {
+    gen(primary_seed ? primary_seed : std::random_device{}()), unif(0.0, 1.0) {
 }
 
 // Конструктор из потока
 Primary::Primary(std::istream& in)
-    : gen(std::random_device{}()), unif(0.0, 1.0) {
+    : gen(primary_seed ? primary_seed : std::random_device{}()), unif(0.0, 1.0) {
     load(in);
+}
+
+// Установка глобального сида
+void Primary::setGlobalSeed(unsigned int seed) {
+    primary_seed = seed;
 }
 
 // Set-функции
@@ -89,6 +98,43 @@ void Primary::moments(double* mean, double* variance, double* skewness, double* 
     else if (v == 4.0) { base_variance = 0.825; base_kurtosis = 0.076; }
     else if (v == 5.0) { base_variance = 0.852; base_kurtosis = 0.055; }
     else if (v == 10.0) { base_variance = 0.916; base_kurtosis = 0.019; }
+    else {
+        // Интерполяция для других значений
+        if (v < 0.1) { base_variance = 0.201; base_kurtosis = 2.902; }
+        else if (v < 0.25) {
+            base_variance = 0.201 + (v - 0.1) * (0.335 - 0.201) / 0.15;
+            base_kurtosis = 2.902 + (v - 0.1) * (1.437 - 2.902) / 0.15;
+        }
+        else if (v < 0.5) {
+            base_variance = 0.335 + (v - 0.25) * (0.461 - 0.335) / 0.25;
+            base_kurtosis = 1.437 + (v - 0.25) * (0.794 - 1.437) / 0.25;
+        }
+        else if (v < 1.0) {
+            base_variance = 0.461 + (v - 0.5) * (0.596 - 0.461) / 0.5;
+            base_kurtosis = 0.794 + (v - 0.5) * (0.405 - 0.794) / 0.5;
+        }
+        else if (v < 2.0) {
+            base_variance = 0.596 + (v - 1.0) * (0.723 - 0.596) / 1.0;
+            base_kurtosis = 0.405 + (v - 1.0) * (0.186 - 0.405) / 1.0;
+        }
+        else if (v < 3.0) {
+            base_variance = 0.723 + (v - 2.0) * (0.786 - 0.723) / 1.0;
+            base_kurtosis = 0.186 + (v - 2.0) * (0.112 - 0.186) / 1.0;
+        }
+        else if (v < 4.0) {
+            base_variance = 0.786 + (v - 3.0) * (0.825 - 0.786) / 1.0;
+            base_kurtosis = 0.112 + (v - 3.0) * (0.076 - 0.112) / 1.0;
+        }
+        else if (v < 5.0) {
+            base_variance = 0.825 + (v - 4.0) * (0.852 - 0.825) / 1.0;
+            base_kurtosis = 0.076 + (v - 4.0) * (0.055 - 0.076) / 1.0;
+        }
+        else {
+            base_variance = 0.852 + (v - 5.0) * (0.916 - 0.852) / 5.0;
+            base_kurtosis = 0.055 + (v - 5.0) * (0.019 - 0.055) / 5.0;
+        }
+    }
+
     *mean = mu;
     *variance = lambda * lambda * base_variance;
     *skewness = 0.0;  // SEN distribution is symmetric
