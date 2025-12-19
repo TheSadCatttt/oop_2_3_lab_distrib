@@ -204,7 +204,108 @@ void generate_all_plot_data(int sen_size, int mix_size, int empirical_sizes[]) {
     ofstream file_primary("data_primary_class.csv");
     file_primary << "x,pdf_class,pdf_function,moment,class_value,function_value,class_samples,function_samples\n";
 
+    // В функции generate_all_plot_data() заменяем старый код после комментария "// 7. Данные для тестирования класса Mixture":
 
+// 7. Данные для тестирования класса Mixture
+    cout << "7. Генерация данных для класса Mixture..." << endl;
+    ofstream file_mixture_class("data_mixture_class.csv");
+    file_mixture_class << "x,pdf_class,pdf_function,moment,class_value,function_value,class_samples,function_samples,mixture_type\n";
+
+    // Параметры для тестирования смеси
+    Primary prim1_mix(1.0, 1.0, 0.0);  // SEN(0,1,1)
+    Primary prim2_mix(2.0, 2.0, 1.0); // SEN(2,2,1)
+    Mixture mixture_class(prim1_mix, prim2_mix, 0.5);
+
+    // Создаем параметры для функционального подхода
+    MixtureParams mix_params = { 0.0, 1.0, 1.0, 2.0, 2.0, 1.0, 0.5 };
+
+    // Генерация данных для плотностей
+    for (double x = -4.0; x <= 8.0; x += 0.08) {
+        double pdf_class_val = mixture_class.pdf(x);
+        double pdf_function_val = pdf_mixture(x, &mix_params);
+
+        file_mixture_class << x << "," << pdf_class_val << "," << pdf_function_val << ",,,,," << "trivial" << "\n";
+    }
+
+    // Данные для моментов
+    double class_mean_mix, class_var_mix, class_skew_mix, class_kurt_mix;
+    double func_mean_mix, func_var_mix, func_skew_mix, func_kurt_mix;
+
+    mixture_class.moments(&class_mean_mix, &class_var_mix, &class_skew_mix, &class_kurt_mix);
+    moments_mixture(&mix_params, &func_mean_mix, &func_var_mix, &func_skew_mix, &func_kurt_mix);
+
+    file_mixture_class << ",,,Среднее," << class_mean_mix << "," << func_mean_mix << ",,," << "moments" << "\n";
+    file_mixture_class << ",,,Дисперсия," << class_var_mix << "," << func_var_mix << ",,," << "moments" << "\n";
+    file_mixture_class << ",,,Асимметрия," << class_skew_mix << "," << func_skew_mix << ",,," << "moments" << "\n";
+    file_mixture_class << ",,,Эксцесс," << class_kurt_mix << "," << func_kurt_mix << ",,," << "moments" << "\n";
+
+    // Генерация случайных величин
+    for (int i = 0; i < 1000; i++) {
+        double class_sample_mix = mixture_class.randNum();
+        double func_sample_mix = generate_mixture(&mix_params);
+        file_mixture_class << ",,,,,," << class_sample_mix << "," << func_sample_mix << ",samples" << "\n";
+    }
+
+    file_mixture_class.close();
+    cout << "   Файл data_mixture_class.csv создан" << endl;
+
+    // 8. Данные для тестирования класса Empiric
+    cout << "8. Генерация данных для класса Empiric..." << endl;
+    ofstream file_empiric_class("data_empiric_class.csv");
+    file_empiric_class << "x,pdf_class,pdf_function,moment,class_value,function_value,class_samples,function_samples,data_size\n";
+
+    // Создаем базовое распределение и эмпирическое из него
+    Primary source_dist(1.0, 1.0, 1.0);
+    const int EMPIRIC_SIZE = 10000;
+
+    // Генерируем выборку для эмпирического
+    double* empiric_sample = new double[EMPIRIC_SIZE];
+    for (int i = 0; i < EMPIRIC_SIZE; i++) {
+        empiric_sample[i] = source_dist.randNum();
+    }
+
+    // Создаем эмпирическое распределение (класс)
+    Empiric empiric_class(EMPIRIC_SIZE, source_dist, 50);
+
+    // Создаем эмпирическое распределение (функциональный подход)
+    EmpiricalParams empiric_params;
+    init_empirical(&empiric_params, empiric_sample, EMPIRIC_SIZE, 50);
+
+    // Генерация данных для плотностей
+    for (double x = -4.0; x <= 4.0; x += 0.08) {
+        double pdf_class_emp = empiric_class.pdf(x);
+        double pdf_function_emp = pdf_empirical(x, &empiric_params);
+
+        file_empiric_class << x << "," << pdf_class_emp << "," << pdf_function_emp
+            << ",,,,," << EMPIRIC_SIZE << "\n";
+    }
+
+    // Данные для моментов
+    double emp_class_mean, emp_class_var, emp_class_skew, emp_class_kurt;
+    double emp_func_mean, emp_func_var, emp_func_skew, emp_func_kurt;
+
+    empiric_class.moments(&emp_class_mean, &emp_class_var, &emp_class_skew, &emp_class_kurt);
+    moments_empirical(&empiric_params, &emp_func_mean, &emp_func_var, &emp_func_skew, &emp_func_kurt);
+
+    file_empiric_class << ",,,Среднее," << emp_class_mean << "," << emp_func_mean << ",,," << EMPIRIC_SIZE << "\n";
+    file_empiric_class << ",,,Дисперсия," << emp_class_var << "," << emp_func_var << ",,," << EMPIRIC_SIZE << "\n";
+    file_empiric_class << ",,,Асимметрия," << emp_class_skew << "," << emp_func_skew << ",,," << EMPIRIC_SIZE << "\n";
+    file_empiric_class << ",,,Эксцесс," << emp_class_kurt << "," << emp_func_kurt << ",,," << EMPIRIC_SIZE << "\n";
+
+    // Генерация случайных величин
+    for (int i = 0; i < 1000; i++) {
+        double class_sample_emp = empiric_class.randNum();
+        double func_sample_emp = generate_empirical(&empiric_params);
+        file_empiric_class << ",,,,,," << class_sample_emp << "," << func_sample_emp << "," << EMPIRIC_SIZE << "\n";
+    }
+
+    file_empiric_class.close();
+
+    // Очистка
+    free_empirical(&empiric_params);
+    delete[] empiric_sample;
+
+    cout << "   Файл data_empiric_class.csv создан" << endl;
 
     // Генерация данных для плотностей
     for (double x = -4.0; x <= 4.0; x += 0.04) {

@@ -39,4 +39,8 @@ void moments_empirical(EmpiricalParams* params, double* mean, double* variance,
 double generate_empirical(EmpiricalParams* params);
 void free_empirical(EmpiricalParams* params);
 
+void set_main_seed(unsigned int seed);
+void set_mixture_seed(unsigned int seed);
+void set_empirical_seed(unsigned int seed);
+
 #endif

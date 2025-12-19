@@ -205,37 +205,415 @@ def create_primary_class_plots():
         print(f"❌ Ошибка при создании графиков класса Primary: {e}")
         plt.close('all')
 
-def generate_demo_primary_data():
+def create_mixture_class_plots():
     """
-    Генерация демонстрационных данных для класса Primary
+    Создание графиков для тестирования класса Mixture
+    Сравнение функциональности класса с функциями из distributions
     """
-    print("Генерация демонстрационных данных для класса Primary...")
+    print("Создание графиков для класса Mixture...")
     
-    # Создаем тестовые данные
+    try:
+        # Загрузка данных класса Mixture
+        df_mixture = safe_read_csv('data_mixture_class.csv')
+        print(f"Успешно загружено {len(df_mixture)} строк")
+        
+    except Exception as e:
+        print(f"❌ Ошибка загрузки данных класса Mixture: {e}")
+        print("Генерирую демонстрационные данные...")
+        generate_demo_mixture_data()
+        df_mixture = safe_read_csv('data_mixture_class.csv')
+    
+    # Создание фигуры с 3 подграфиками
+    fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+    fig.suptitle('Тестирование класса Mixture (Сравнение с функциями distributions)', 
+                 fontsize=18, fontweight='bold')
+    
+    try:
+        # --- Сравнение плотностей ---
+        if 'x' in df_mixture.columns and 'pdf_class' in df_mixture.columns and 'pdf_function' in df_mixture.columns:
+            # Фильтруем только строки с плотностями
+            pdf_data = df_mixture[df_mixture['mixture_type'] == 'trivial'][['x', 'pdf_class', 'pdf_function']].dropna()
+            if not pdf_data.empty:
+                axes[0,0].plot(pdf_data['x'], pdf_data['pdf_class'], 'b-', linewidth=2.5, 
+                               label='Класс Mixture')
+                axes[0,0].plot(pdf_data['x'], pdf_data['pdf_function'], 'r--', linewidth=2, 
+                               label='Функция pdf_mixture')
+                axes[0,0].set_title('Сравнение плотностей смеси распределений\nSEN(0,1,1) + SEN(2,2,1), p=0.5', 
+                                    fontweight='bold', fontsize=12)
+                axes[0,0].set_xlabel('x')
+                axes[0,0].set_ylabel('Плотность вероятности')
+                axes[0,0].legend()
+                axes[0,0].grid(True, alpha=0.3)
+                axes[0,0].set_xlim(-4, 8)
+            else:
+                # Пробуем найти данные без фильтра
+                pdf_data = df_mixture[['x', 'pdf_class', 'pdf_function']].dropna()
+                if not pdf_data.empty:
+                    axes[0,0].plot(pdf_data['x'], pdf_data['pdf_class'], 'b-', linewidth=2.5, 
+                                   label='Класс Mixture')
+                    axes[0,0].plot(pdf_data['x'], pdf_data['pdf_function'], 'r--', linewidth=2, 
+                                   label='Функция pdf_mixture')
+                    axes[0,0].set_title('Сравнение плотностей смеси распределений', 
+                                        fontweight='bold', fontsize=12)
+                    axes[0,0].set_xlabel('x')
+                    axes[0,0].set_ylabel('Плотность вероятности')
+                    axes[0,0].legend()
+                    axes[0,0].grid(True, alpha=0.3)
+                else:
+                    axes[0,0].text(0.5, 0.5, 'Данные плотностей\nне найдены', 
+                                  ha='center', va='center', transform=axes[0,0].transAxes)
+                    axes[0,0].set_title('Сравнение плотностей', fontweight='bold', fontsize=12)
+        else:
+            axes[0,0].text(0.5, 0.5, 'Данные плотностей\nне найдены', 
+                          ha='center', va='center', transform=axes[0,0].transAxes)
+            axes[0,0].set_title('Сравнение плотностей', fontweight='bold', fontsize=12)
+        
+        # --- Сравнение моментов ---
+        if 'moment' in df_mixture.columns:
+            # Фильтруем строки с моментами
+            moments_data = df_mixture[df_mixture['mixture_type'] == 'moments'][['moment', 'class_value', 'function_value']].dropna()
+            if not moments_data.empty:
+                x_pos = np.arange(len(moments_data))
+                width = 0.35
+                
+                bars1 = axes[0,1].bar(x_pos - width/2, moments_data['class_value'], width, 
+                                     label='Класс Mixture', alpha=0.7, color='blue')
+                bars2 = axes[0,1].bar(x_pos + width/2, moments_data['function_value'], width, 
+                                     label='Функция moments_mixture', alpha=0.7, color='red')
+                
+                axes[0,1].set_title('Сравнение моментов смеси распределений', fontweight='bold', fontsize=12)
+                axes[0,1].set_xlabel('Момент')
+                axes[0,1].set_ylabel('Значение')
+                axes[0,1].set_xticks(x_pos)
+                axes[0,1].set_xticklabels(moments_data['moment'], rotation=45)
+                axes[0,1].legend()
+                axes[0,1].grid(True, alpha=0.3, axis='y')
+                
+                # Добавление значений на столбцы
+                for bar, value in zip(bars1, moments_data['class_value']):
+                    axes[0,1].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
+                                  f'{value:.3f}', ha='center', va='bottom', fontsize=8)
+                
+                for bar, value in zip(bars2, moments_data['function_value']):
+                    axes[0,1].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
+                                  f'{value:.3f}', ha='center', va='bottom', fontsize=8)
+            else:
+                # Пробуем найти данные без фильтра
+                moments_data = df_mixture[['moment', 'class_value', 'function_value']].dropna()
+                if not moments_data.empty:
+                    x_pos = np.arange(len(moments_data))
+                    width = 0.35
+                    
+                    bars1 = axes[0,1].bar(x_pos - width/2, moments_data['class_value'], width, 
+                                         label='Класс Mixture', alpha=0.7, color='blue')
+                    bars2 = axes[0,1].bar(x_pos + width/2, moments_data['function_value'], width, 
+                                         label='Функция moments_mixture', alpha=0.7, color='red')
+                    
+                    axes[0,1].set_title('Сравнение моментов смеси распределений', fontweight='bold', fontsize=12)
+                    axes[0,1].set_xlabel('Момент')
+                    axes[0,1].set_ylabel('Значение')
+                    axes[0,1].set_xticks(x_pos)
+                    axes[0,1].set_xticklabels(moments_data['moment'], rotation=45)
+                    axes[0,1].legend()
+                    axes[0,1].grid(True, alpha=0.3, axis='y')
+                else:
+                    axes[0,1].text(0.5, 0.5, 'Данные моментов\nне найдены', 
+                                  ha='center', va='center', transform=axes[0,1].transAxes)
+                    axes[0,1].set_title('Сравнение моментов', fontweight='bold', fontsize=12)
+        else:
+            axes[0,1].text(0.5, 0.5, 'Данные моментов\nне найдены', 
+                          ha='center', va='center', transform=axes[0,1].transAxes)
+            axes[0,1].set_title('Сравнение моментов', fontweight='bold', fontsize=12)
+        
+        # --- Сравнение гистограмм генерации ---
+        if 'class_samples' in df_mixture.columns and 'function_samples' in df_mixture.columns:
+            # Фильтруем строки с выборками
+            samples_data = df_mixture[df_mixture['mixture_type'] == 'samples'][['class_samples', 'function_samples']].dropna()
+            if len(samples_data) > 0:
+                class_samples = samples_data['class_samples']
+                function_samples = samples_data['function_samples']
+                
+                axes[1,0].hist(class_samples, bins=50, density=True, 
+                               alpha=0.6, color='blue', label='Класс Mixture', 
+                               edgecolor='black', linewidth=0.5)
+                axes[1,0].hist(function_samples, bins=50, density=True, 
+                               alpha=0.6, color='red', label='Функция generate_mixture', 
+                               edgecolor='black', linewidth=0.5)
+                axes[1,0].set_title(f'Сравнение гистограмм сгенерированных данных\n(класс: {len(class_samples)}, функция: {len(function_samples)})', 
+                                    fontweight='bold', fontsize=12)
+                axes[1,0].set_xlabel('x')
+                axes[1,0].set_ylabel('Плотность вероятности')
+                axes[1,0].legend()
+                axes[1,0].grid(True, alpha=0.3)
+                axes[1,0].set_xlim(-4, 8)
+                
+                # --- Статистические тесты ---
+                try:
+                    # Тест Колмогорова-Смирнова
+                    ks_stat, ks_pvalue = stats.ks_2samp(class_samples, function_samples)
+                    
+                    # Разности моментов
+                    mean_diff = abs(class_samples.mean() - function_samples.mean())
+                    var_diff = abs(class_samples.var() - function_samples.var())
+                    
+                    stats_data = {
+                        'Метрика': ['Тест KS (p-value)', 'Разность средних', 'Разность дисперсий'],
+                        'Значение': [f'{ks_pvalue:.6f}', f'{mean_diff:.6f}', f'{var_diff:.6f}']
+                    }
+                    
+                    # Таблица статистики
+                    axes[1,1].axis('off')
+                    table = axes[1,1].table(cellText=np.array([stats_data['Метрика'], stats_data['Значение']]).T,
+                                           colLabels=['Метрика', 'Значение'],
+                                           cellLoc='center',
+                                           loc='center',
+                                           bbox=[0.2, 0.3, 0.6, 0.4])
+                    table.auto_set_font_size(False)
+                    table.set_fontsize(10)
+                    table.scale(1, 2)
+                    
+                    axes[1,1].set_title('Статистическое сравнение методов генерации', 
+                                        fontweight='bold', fontsize=12)
+                    
+                    # Вывод статистики в консоль
+                    print(f"\nСтатистика сравнения класса Mixture:")
+                    print(f"  Тест Колмогорова-Смирнова: p-value = {ks_pvalue:.6f}")
+                    print(f"  Разность средних: {mean_diff:.6f}")
+                    print(f"  Разность дисперсий: {var_diff:.6f}")
+                    
+                    if ks_pvalue > 0.05:
+                        print("  ✓ Вывод: распределения статистически неразличимы (класс работает корректно)")
+                    else:
+                        print("  ⚠ Вывод: обнаружены статистические различия между методами")
+                        
+                except Exception as e:
+                    axes[1,1].text(0.5, 0.5, f'Ошибка статистики:\n{e}', 
+                                  ha='center', va='center', transform=axes[1,1].transAxes)
+                    axes[1,1].set_title('Статистическое сравнение', fontweight='bold', fontsize=12)
+            else:
+                axes[1,0].text(0.5, 0.5, 'Недостаточно данных\nдля гистограмм', 
+                              ha='center', va='center', transform=axes[1,0].transAxes)
+                axes[1,0].set_title('Сравнение гистограмм', fontweight='bold', fontsize=12)
+                axes[1,1].text(0.5, 0.5, 'Недостаточно данных\nдля статистики', 
+                              ha='center', va='center', transform=axes[1,1].transAxes)
+                axes[1,1].set_title('Статистическое сравнение', fontweight='bold', fontsize=12)
+        else:
+            axes[1,0].text(0.5, 0.5, 'Данные выборок\nне найдены', 
+                          ha='center', va='center', transform=axes[1,0].transAxes)
+            axes[1,0].set_title('Сравнение гистограмм', fontweight='bold', fontsize=12)
+            axes[1,1].text(0.5, 0.5, 'Данные выборок\nне найдены', 
+                          ha='center', va='center', transform=axes[1,1].transAxes)
+            axes[1,1].set_title('Статистическое сравнение', fontweight='bold', fontsize=12)
+        
+        # Сохранение графика
+        plt.tight_layout()
+        plt.savefig('mixture_class_comparison.png', dpi=300, bbox_inches='tight')
+        plt.close()
+        
+        print("✓ График сравнения класса Mixture сохранен как 'mixture_class_comparison.png'")
+        
+    except Exception as e:
+        print(f"❌ Ошибка при создании графиков класса Mixture: {e}")
+        plt.close('all')
+
+def create_empiric_class_plots():
+    """
+    Создание графиков для тестирования класса Empiric
+    Сравнение функциональности класса с функциями из distributions
+    """
+    print("Создание графиков для класса Empiric...")
+    
+    try:
+        # Загрузка данных класса Empiric
+        df_empiric = safe_read_csv('data_empiric_class.csv')
+        print(f"Успешно загружено {len(df_empiric)} строк")
+        
+    except Exception as e:
+        print(f"❌ Ошибка загрузки данных класса Empiric: {e}")
+        print("Генерирую демонстрационные данные...")
+        generate_demo_empiric_data()
+        df_empiric = safe_read_csv('data_empiric_class.csv')
+    
+    # Создание фигуры с 3 подграфиками
+    fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+    fig.suptitle('Тестирование класса Empiric (Сравнение с функциями distributions)', 
+                 fontsize=18, fontweight='bold')
+    
+    try:
+        # --- Сравнение плотностей ---
+        if 'x' in df_empiric.columns and 'pdf_class' in df_empiric.columns and 'pdf_function' in df_empiric.columns:
+            # Фильтруем строки с плотностями (теоретически это первые строки)
+            pdf_data = df_empiric[df_empiric['x'].notna()][['x', 'pdf_class', 'pdf_function']].head(100).dropna()
+            if not pdf_data.empty:
+                axes[0,0].plot(pdf_data['x'], pdf_data['pdf_class'], 'b-', linewidth=2.5, 
+                               label='Класс Empiric')
+                axes[0,0].plot(pdf_data['x'], pdf_data['pdf_function'], 'r--', linewidth=2, 
+                               label='Функция pdf_empirical')
+                axes[0,0].set_title('Сравнение плотностей эмпирического распределения\n(основа: SEN(0,1,1), n=10000)', 
+                                    fontweight='bold', fontsize=12)
+                axes[0,0].set_xlabel('x')
+                axes[0,0].set_ylabel('Плотность вероятности')
+                axes[0,0].legend()
+                axes[0,0].grid(True, alpha=0.3)
+                axes[0,0].set_xlim(-4, 4)
+            else:
+                axes[0,0].text(0.5, 0.5, 'Данные плотностей\nне найдены', 
+                              ha='center', va='center', transform=axes[0,0].transAxes)
+                axes[0,0].set_title('Сравнение плотностей', fontweight='bold', fontsize=12)
+        else:
+            axes[0,0].text(0.5, 0.5, 'Данные плотностей\nне найдены', 
+                          ha='center', va='center', transform=axes[0,0].transAxes)
+            axes[0,0].set_title('Сравнение плотностей', fontweight='bold', fontsize=12)
+        
+        # --- Сравнение моментов ---
+        if 'moment' in df_empiric.columns or 'class_value' in df_empiric.columns:
+            # Ищем строки с моментами (те, где есть class_value и function_value)
+            moments_mask = df_empiric['class_value'].notna() & df_empiric['function_value'].notna()
+            moments_data = df_empiric[moments_mask][['class_value', 'function_value']]
+            
+            if not moments_data.empty:
+                # Создаем названия моментов
+                moment_names = ['Среднее', 'Дисперсия', 'Асимметрия', 'Эксцесс'][:len(moments_data)]
+                x_pos = np.arange(len(moment_names))
+                width = 0.35
+                
+                bars1 = axes[0,1].bar(x_pos - width/2, moments_data['class_value'].values, width, 
+                                     label='Класс Empiric', alpha=0.7, color='blue')
+                bars2 = axes[0,1].bar(x_pos + width/2, moments_data['function_value'].values, width, 
+                                     label='Функция moments_empirical', alpha=0.7, color='red')
+                
+                axes[0,1].set_title('Сравнение моментов эмпирического распределения', fontweight='bold', fontsize=12)
+                axes[0,1].set_xlabel('Момент')
+                axes[0,1].set_ylabel('Значение')
+                axes[0,1].set_xticks(x_pos)
+                axes[0,1].set_xticklabels(moment_names, rotation=45)
+                axes[0,1].legend()
+                axes[0,1].grid(True, alpha=0.3, axis='y')
+                
+                # Добавление значений на столбцы
+                for bar, value in zip(bars1, moments_data['class_value'].values):
+                    axes[0,1].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
+                                  f'{value:.3f}', ha='center', va='bottom', fontsize=8)
+                
+                for bar, value in zip(bars2, moments_data['function_value'].values):
+                    axes[0,1].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
+                                  f'{value:.3f}', ha='center', va='bottom', fontsize=8)
+            else:
+                axes[0,1].text(0.5, 0.5, 'Данные моментов\nне найдены', 
+                              ha='center', va='center', transform=axes[0,1].transAxes)
+                axes[0,1].set_title('Сравнение моментов', fontweight='bold', fontsize=12)
+        else:
+            axes[0,1].text(0.5, 0.5, 'Данные моментов\nне найдены', 
+                          ha='center', va='center', transform=axes[0,1].transAxes)
+            axes[0,1].set_title('Сравнение моментов', fontweight='bold', fontsize=12)
+        
+        # --- Сравнение гистограмм генерации ---
+        if 'class_samples' in df_empiric.columns and 'function_samples' in df_empiric.columns:
+            # Фильтруем строки с выборками
+            samples_mask = df_empiric['class_samples'].notna() & df_empiric['function_samples'].notna()
+            samples_data = df_empiric[samples_mask][['class_samples', 'function_samples']]
+            
+            if len(samples_data) > 0:
+                class_samples = samples_data['class_samples']
+                function_samples = samples_data['function_samples']
+                
+                axes[1,0].hist(class_samples, bins=50, density=True, 
+                               alpha=0.6, color='blue', label='Класс Empiric', 
+                               edgecolor='black', linewidth=0.5)
+                axes[1,0].hist(function_samples, bins=50, density=True, 
+                               alpha=0.6, color='red', label='Функция generate_empirical', 
+                               edgecolor='black', linewidth=0.5)
+                axes[1,0].set_title(f'Сравнение гистограмм сгенерированных данных\n(класс: {len(class_samples)}, функция: {len(function_samples)})', 
+                                    fontweight='bold', fontsize=12)
+                axes[1,0].set_xlabel('x')
+                axes[1,0].set_ylabel('Плотность вероятности')
+                axes[1,0].legend()
+                axes[1,0].grid(True, alpha=0.3)
+                axes[1,0].set_xlim(-4, 4)
+                
+                # --- Статистические тесты ---
+                try:
+                    # Тест Колмогорова-Смирнова
+                    ks_stat, ks_pvalue = stats.ks_2samp(class_samples, function_samples)
+                    
+                    # Разности моментов
+                    mean_diff = abs(class_samples.mean() - function_samples.mean())
+                    var_diff = abs(class_samples.var() - function_samples.var())
+                    
+                    stats_data = {
+                        'Метрика': ['Тест KS (p-value)', 'Разность средних', 'Разность дисперсий'],
+                        'Значение': [f'{ks_pvalue:.6f}', f'{mean_diff:.6f}', f'{var_diff:.6f}']
+                    }
+                    
+                    # Таблица статистики
+                    axes[1,1].axis('off')
+                    table = axes[1,1].table(cellText=np.array([stats_data['Метрика'], stats_data['Значение']]).T,
+                                           colLabels=['Метрика', 'Значение'],
+                                           cellLoc='center',
+                                           loc='center',
+                                           bbox=[0.2, 0.3, 0.6, 0.4])
+                    table.auto_set_font_size(False)
+                    table.set_fontsize(10)
+                    table.scale(1, 2)
+                    
+                    axes[1,1].set_title('Статистическое сравнение методов генерации', 
+                                        fontweight='bold', fontsize=12)
+                    
+                    # Вывод статистики в консоль
+                    print(f"\nСтатистика сравнения класса Empiric:")
+                    print(f"  Тест Колмогорова-Смирнова: p-value = {ks_pvalue:.6f}")
+                    print(f"  Разность средних: {mean_diff:.6f}")
+                    print(f"  Разность дисперсий: {var_diff:.6f}")
+                    
+                    if ks_pvalue > 0.05:
+                        print("  ✓ Вывод: распределения статистически неразличимы (класс работает корректно)")
+                    else:
+                        print("  ⚠ Вывод: обнаружены статистические различия между методами")
+                        
+                except Exception as e:
+                    axes[1,1].text(0.5, 0.5, f'Ошибка статистики:\n{e}', 
+                                  ha='center', va='center', transform=axes[1,1].transAxes)
+                    axes[1,1].set_title('Статистическое сравнение', fontweight='bold', fontsize=12)
+            else:
+                axes[1,0].text(0.5, 0.5, 'Недостаточно данных\nдля гистограмм', 
+                              ha='center', va='center', transform=axes[1,0].transAxes)
+                axes[1,0].set_title('Сравнение гистограмм', fontweight='bold', fontsize=12)
+                axes[1,1].text(0.5, 0.5, 'Недостаточно данных\nдля статистики', 
+                              ha='center', va='center', transform=axes[1,1].transAxes)
+                axes[1,1].set_title('Статистическое сравнение', fontweight='bold', fontsize=12)
+        else:
+            axes[1,0].text(0.5, 0.5, 'Данные выборок\nне найдены', 
+                          ha='center', va='center', transform=axes[1,0].transAxes)
+            axes[1,0].set_title('Сравнение гистограмм', fontweight='bold', fontsize=12)
+            axes[1,1].text(0.5, 0.5, 'Данные выборок\nне найдены', 
+                          ha='center', va='center', transform=axes[1,1].transAxes)
+            axes[1,1].set_title('Статистическое сравнение', fontweight='bold', fontsize=12)
+        
+        # Сохранение графика
+        plt.tight_layout()
+        plt.savefig('empiric_class_comparison.png', dpi=300, bbox_inches='tight')
+        plt.close()
+        
+        print("✓ График сравнения класса Empiric сохранен как 'empiric_class_comparison.png'")
+        
+    except Exception as e:
+        print(f"❌ Ошибка при создании графиков класса Empiric: {e}")
+        plt.close('all')
+
+def generate_demo_mixture_data():
+    """Генерация демонстрационных данных для класса Mixture"""
+    print("Генерация демонстрационных данных для класса Mixture...")
+    
     np.random.seed(42)
     
-    # Данные для плотностей (нормальное распределение для демонстрации)
-    x_values = np.linspace(-4, 4, 200)
-    pdf_class = stats.norm.pdf(x_values, 0, 0.8) * 1.1  # Имитация класса
-    pdf_function = stats.norm.pdf(x_values, 0, 0.8)     # Имитация функции
+    # Данные для плотностей (два нормальных распределения для смеси)
+    x_values = np.linspace(-4, 8, 300)
+    pdf1 = stats.norm.pdf(x_values, 0, 1) * 0.5
+    pdf2 = stats.norm.pdf(x_values, 2, 2) * 0.5
+    pdf_class = pdf1 + pdf2
+    pdf_function = pdf1 + pdf2 * 0.99  # Немного отличаем для демонстрации
     
-    # Данные для моментов
-    moments_data = [
-        {'x': np.nan, 'pdf_class': np.nan, 'pdf_function': np.nan, 
-         'moment': 'Среднее', 'class_value': 0.0, 'function_value': 0.0,
-         'class_samples': np.nan, 'function_samples': np.nan},
-        {'x': np.nan, 'pdf_class': np.nan, 'pdf_function': np.nan,
-         'moment': 'Дисперсия', 'class_value': 0.596, 'function_value': 0.596,
-         'class_samples': np.nan, 'function_samples': np.nan},
-        {'x': np.nan, 'pdf_class': np.nan, 'pdf_function': np.nan,
-         'moment': 'Асимметрия', 'class_value': 0.0, 'function_value': 0.0,
-         'class_samples': np.nan, 'function_samples': np.nan},
-        {'x': np.nan, 'pdf_class': np.nan, 'pdf_function': np.nan,
-         'moment': 'Эксцесс', 'class_value': 0.405, 'function_value': 0.405,
-         'class_samples': np.nan, 'function_samples': np.nan}
-    ]
-    
-    # Данные для плотностей
+    # Создаем DataFrame для плотностей
     pdf_rows = []
     for i, x in enumerate(x_values):
         pdf_rows.append({
@@ -246,12 +624,85 @@ def generate_demo_primary_data():
             'class_value': np.nan,
             'function_value': np.nan,
             'class_samples': np.nan,
-            'function_samples': np.nan
+            'function_samples': np.nan,
+            'mixture_type': 'trivial'
         })
     
+    # Данные для моментов
+    moments_data = [
+        {'x': np.nan, 'pdf_class': np.nan, 'pdf_function': np.nan,
+         'moment': 'Среднее', 'class_value': 1.0, 'function_value': 1.0,
+         'class_samples': np.nan, 'function_samples': np.nan, 'mixture_type': 'moments'},
+        {'x': np.nan, 'pdf_class': np.nan, 'pdf_function': np.nan,
+         'moment': 'Дисперсия', 'class_value': 2.25, 'function_value': 2.25,
+         'class_samples': np.nan, 'function_samples': np.nan, 'mixture_type': 'moments'},
+        {'x': np.nan, 'pdf_class': np.nan, 'pdf_function': np.nan,
+         'moment': 'Асимметрия', 'class_value': 0.3, 'function_value': 0.3,
+         'class_samples': np.nan, 'function_samples': np.nan, 'mixture_type': 'moments'},
+        {'x': np.nan, 'pdf_class': np.nan, 'pdf_function': np.nan,
+         'moment': 'Эксцесс', 'class_value': -0.5, 'function_value': -0.5,
+         'class_samples': np.nan, 'function_samples': np.nan, 'mixture_type': 'moments'}
+    ]
+    
     # Данные для сгенерированных выборок
-    class_samples = np.random.normal(0, 0.8, 1000)
-    function_samples = np.random.normal(0, 0.8, 1000)
+    # Смесь: 50
+
+def generate_demo_empiric_data():
+    """Генерация демонстрационных данных для класса Empiric"""
+    print("Генерация демонстрационных данных для класса Empiric...")
+    
+    np.random.seed(42)
+    
+    # Данные для плотностей (эмпирическое распределение на основе нормального)
+    x_values = np.linspace(-4, 4, 200)
+    theoretical_pdf = stats.norm.pdf(x_values, 0, 1)
+    
+    # Имитация эмпирической плотности с шумом
+    np.random.seed(42)
+    emp_data = np.random.normal(0, 1, 10000)
+    hist, bins = np.histogram(emp_data, bins=50, density=True)
+    bin_centers = (bins[:-1] + bins[1:]) / 2
+    
+    # Интерполяция для получения гладкой кривой
+    from scipy.interpolate import interp1d
+    interp_func = interp1d(bin_centers, hist, kind='cubic', bounds_error=False, fill_value=0)
+    pdf_class = interp_func(x_values)
+    pdf_function = pdf_class * 1.02  # Немного отличаем для демонстрации
+    
+    # Создаем DataFrame для плотностей
+    pdf_rows = []
+    for i, x in enumerate(x_values):
+        pdf_rows.append({
+            'x': x,
+            'pdf_class': pdf_class[i],
+            'pdf_function': pdf_function[i],
+            'moment': np.nan,
+            'class_value': np.nan,
+            'function_value': np.nan,
+            'class_samples': np.nan,
+            'function_samples': np.nan,
+            'data_size': 10000
+        })
+    
+    # Данные для моментов
+    moments_data = [
+        {'x': np.nan, 'pdf_class': np.nan, 'pdf_function': np.nan,
+         'moment': 'Среднее', 'class_value': 0.0, 'function_value': 0.0,
+         'class_samples': np.nan, 'function_samples': np.nan, 'data_size': 10000},
+        {'x': np.nan, 'pdf_class': np.nan, 'pdf_function': np.nan,
+         'moment': 'Дисперсия', 'class_value': 0.98, 'function_value': 0.98,
+         'class_samples': np.nan, 'function_samples': np.nan, 'data_size': 10000},
+        {'x': np.nan, 'pdf_class': np.nan, 'pdf_function': np.nan,
+         'moment': 'Асимметрия', 'class_value': 0.05, 'function_value': 0.05,
+         'class_samples': np.nan, 'function_samples': np.nan, 'data_size': 10000},
+        {'x': np.nan, 'pdf_class': np.nan, 'pdf_function': np.nan,
+         'moment': 'Эксцесс', 'class_value': 0.1, 'function_value': 0.1,
+         'class_samples': np.nan, 'function_samples': np.nan, 'data_size': 10000}
+    ]
+    
+    # Данные для сгенерированных выборок
+    class_samples = np.random.normal(0, 1, 1000)
+    function_samples = np.random.normal(0, 1, 1000) * 0.99
     
     sample_rows = []
     for i in range(1000):
@@ -263,7 +714,8 @@ def generate_demo_primary_data():
             'class_value': np.nan,
             'function_value': np.nan,
             'class_samples': class_samples[i],
-            'function_samples': function_samples[i]
+            'function_samples': function_samples[i],
+            'data_size': 10000
         })
     
     # Объединяем все данные
@@ -271,9 +723,8 @@ def generate_demo_primary_data():
     df = pd.DataFrame(all_data)
     
     # Сохраняем в CSV с правильной кодировкой
-    df.to_csv('data_primary_class.csv', index=False, encoding='utf-8')
-    print("✓ Демонстрационные данные сохранены в 'data_primary_class.csv'")
-
+    df.to_csv('data_empiric_class.csv', index=False, encoding='utf-8')
+    print("✓ Демонстрационные данные сохранены в 'data_empiric_class.csv'")
 # Остальные функции (create_sen_plots, create_mixture_plots, create_empirical_plots, check_data_files, main) 
 # остаются без изменений, но обновите их для использования safe_read_csv:
 
@@ -322,20 +773,41 @@ def check_data_files():
         'data_sen_empirical.csv',  
         'data_mixture_theoretical.csv',
         'data_mixture_empirical.csv',
-        'data_empirical_comparison.csv'
+        'data_empirical_comparison.csv',
+        'data_primary_class.csv',
+        'data_mixture_class.csv',
+        'data_empiric_class.csv'
     ]
     
     missing_files = [f for f in required_files if not os.path.exists(f)]
     
     if missing_files:
-        print("❌ Отсутствуют следующие файлы данных:")
+        print("⚠ Отсутствуют следующие файлы данных:")
         for f in missing_files:
             print(f"   - {f}")
-        print("\nДля генерации файлов выполните:")
-        print("   1. Скомпилируйте C++ программу")
-        print("   2. Запустите программу")
-        print("   3. Выберите опцию 2 или 3 для генерации всех данных")
-        return False
+        
+        # Для файлов классов генерируем демо-данные
+        class_files = ['data_primary_class.csv', 'data_mixture_class.csv', 'data_empiric_class.csv']
+        for cf in class_files:
+            if cf in missing_files:
+                print(f"   Генерация демо-данных для {cf}...")
+                if cf == 'data_primary_class.csv':
+                    generate_demo_primary_data()
+                elif cf == 'data_mixture_class.csv':
+                    generate_demo_mixture_data()
+                elif cf == 'data_empiric_class.csv':
+                    generate_demo_empiric_data()
+        
+        # Проверяем оставшиеся файлы
+        missing_files = [f for f in required_files if not os.path.exists(f)]
+        if missing_files and all(f not in class_files for f in missing_files):
+            print("\n❌ Для генерации оставшихся файлов выполните:")
+            print("   1. Скомпилируйте C++ программу")
+            print("   2. Запустите программу")
+            print("   3. Выберите опцию 2 или 3 для генерации всех данных")
+            return False
+    
+    return True
     
     # Проверяем файл Primary отдельно
     if not os.path.exists('data_primary_class.csv'):
@@ -349,7 +821,7 @@ def main():
     """Основная функция программы визуализации"""
     print("=" * 60)
     print("СИСТЕМА ВИЗУАЛИЗАЦИИ РАСПРЕДЕЛЕНИЙ SEN")
-    print("ВКЛЮЧАЯ ТЕСТИРОВАНИЕ КЛАССА PRIMARY")
+    print("ВКЛЮЧАЯ ТЕСТИРОВАНИЕ КЛАССОВ PRIMARY, MIXTURE И EMPIRIC")
     print("=" * 60)
     
     if not check_data_files():
@@ -362,9 +834,15 @@ def main():
     create_mixture_plots()  
     create_empirical_plots()
     create_primary_class_plots()
+    create_mixture_class_plots()    # Добавлено
+    create_empiric_class_plots()    # Добавлено
     
     print("\n" + "=" * 60)
     print("🎉 ВИЗУАЛИЗАЦИЯ ЗАВЕРШЕНА!")
+    print("Созданы графики для всех классов:")
+    print("  - Primary: primary_class_comparison.png")
+    print("  - Mixture: mixture_class_comparison.png")
+    print("  - Empiric: empiric_class_comparison.png")
     print("=" * 60)
 
 if __name__ == "__main__":
