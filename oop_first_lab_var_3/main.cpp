@@ -755,29 +755,27 @@ void test_empiric_class() {
 }
 
 //  ДЕМОНСТРАЦИЯ ОТНОШЕНИЙ МЕЖДУ ОБЪЕКТАМИ
-/*
+
 void demonstrate_objects_relationships() {
-    cout << "\n=== Демонстрация отношений между объектами ===" << endl;
+    cout << "\n Демонстрация отношений между объектами" << endl;
 
     try {
         // 1. Композиция: Mixture содержит Primary объекты
-        cout << "1. КОМПОЗИЦИЯ (Mixture содержит Primary):" << endl;
-        cout << "==========================================" << endl;
+        cout << "1. Композиция (Mixture содержит Primary):" << endl;
 
         Primary comp1(1.0, 1.0, 0.0);  // SEN(0,1,1)
         Primary comp2(1.0, 2.0, 1.0);  // SEN(1,2,1)
         Mixture mixture(comp1, comp2, 0.6);
 
-        cout << "   - Создана смесь с двумя компонентами Primary" << endl;
-        cout << "   - Время жизни компонентов совпадает со временем жизни смеси" << endl;
-        cout << "   - Компонент 1: μ=" << mixture.component1().getShift()
-            << ", λ=" << mixture.component1().getScale() << endl;
-        cout << "   - Компонент 2: μ=" << mixture.component2().getShift()
-            << ", λ=" << mixture.component2().getScale() << endl;
+        cout << "   Создана смесь с двумя компонентами Primary" << endl;
+        cout << "   Время жизни компонентов совпадает со временем жизни смеси" << endl;
+        cout << "   Компонент 1: mu=" << mixture.component1().getShift()
+            << ", lambda=" << mixture.component1().getScale() << endl;
+        cout << "   - Компонент 2: mu=" << mixture.component2().getShift()
+            << ", lambda=" << mixture.component2().getScale() << endl;
 
         // 2. Клиент-серверные отношения: Empiric использует другие распределения
-        cout << "\n2. КЛИЕНТ-СЕРВЕРНЫЕ ОТНОШЕНИЯ (Empiric использует распределения):" << endl;
-        cout << "===============================================================" << endl;
+        cout << "\n2. Клиент-серверные отношения (Empiric использует распределения):" << endl;
 
         // Empiric из Primary
         Empiric empiric_prim(500, comp1, 15);
@@ -790,18 +788,16 @@ void demonstrate_objects_relationships() {
         cout << "     Объем выборки: " << empiric_mixture.getN() << endl;
 
         // 3. Связи между Empiric объектами
-        cout << "\n3. СВЯЗИ МЕЖДУ EMPIRIC ОБЪЕКТАМИ:" << endl;
-        cout << "=================================" << endl;
+        cout << "\n3. Связи между Empiric объектами:" << endl;
 
         Empiric empiric_from_empiric(200, empiric_prim, 10);
         cout << "   - Empiric использует другой Empiric для генерации выборки" << endl;
-        cout << "     Цепочка: Primary → Empiric1 → Empiric2" << endl;
-        cout << "     Размеры: " << empiric_prim.getN() << " → "
+        cout << "     Цепочка: Primary > Empiric1 > Empiric2" << endl;
+        cout << "     Размеры: " << empiric_prim.getN() << " > "
             << empiric_from_empiric.getN() << " элементов" << endl;
 
         // 4. Демонстрация глубокого копирования
-        cout << "\n4. ГЛУБОКОЕ КОПИРОВАНИЕ (Empiric):" << endl;
-        cout << "==================================" << endl;
+        cout << "\n4. Глубокое копирование (Empiric):" << endl;
 
         Empiric original(100, comp1, 10);
         cout << "   - Оригинал: n=" << original.getN() << ", k=" << original.getK() << endl;
@@ -823,34 +819,27 @@ void demonstrate_objects_relationships() {
         cout << "     Копия:    " << &copy_constructed << endl;
 
         // 5. Демонстрация работы с разными типами распределений
-        cout << "\n5. РАБОТА С РАЗНЫМИ ТИПАМИ РАСПРЕДЕЛЕНИЙ:" << endl;
+        cout << "\n5. Работа с разными типами распределений:" << endl;
 
         cout << "   - Primary SEN(0,1,1):" << endl;
-        cout << "     M=" << comp1.getShift() << ", λ=" << comp1.getScale()
+        cout << "     M=" << comp1.getShift() << ", lambda=" << comp1.getScale()
             << ", v=" << comp1.getForm() << endl;
 
         cout << "   - Mixture (p=0.6):" << endl;
         double mean, variance, skewness, kurtosis;
         mixture.moments(&mean, &variance, &skewness, &kurtosis);
-        cout << "     Mξ=" << mean << ", Dξ=" << variance << endl;
+        cout << "     м. ожид. =" << mean << ", дисперсия=" << variance << endl;
 
         cout << "   - Empiric из Primary:" << endl;
         empiric_prim.moments(&mean, &variance, &skewness, &kurtosis);
-        cout << "     Mξ=" << mean << ", Dξ=" << variance << endl;
-
-        cout << "\nДемонстрация отношений между объектами завершена!" << endl;
-        cout << "Все типы отношений успешно реализованы:" << endl;
-        cout << "  - Композиция (целое-часть)" << endl;
-        cout << "  - Клиент-серверные отношения" << endl;
-        cout << "  - Связи между объектами" << endl;
-        cout << "  - Глубокое копирование" << endl;
+        cout << "     м. ожид=" << mean << ", дисперсия=" << variance << endl;
 
     }
     catch (const exception& e) {
         cerr << "Ошибка при демонстрации отношений: " << e.what() << endl;
     }
 }
-*/
+
 // ГЛАВНАЯ ФУНКЦИЯ
 int main() {
     setlocale(LC_ALL, "Russian");
@@ -866,7 +855,7 @@ int main() {
         cout << "5 - Тестирование класса Primary" << endl;
         cout << "6 - Тестирование класса Mixture" << endl;
         cout << "7 - Тестирование класса Empiric" << endl;
-        //cout << "8 - Демонстрация отношений между объектами" << endl;
+        cout << "8 - Тест отношений между объектами" << endl;
         cout << "0 - Выход" << endl;
         cout << "Выберите операцию: ";
         cin >> choice;
@@ -898,9 +887,9 @@ int main() {
         case 7:
             test_empiric_class();
             break;
-       /* case 8:
+       case 8:
             demonstrate_objects_relationships();
-            break;*/
+            break;
         case 0:
             cout << "Выход из программы..." << endl;
             break;

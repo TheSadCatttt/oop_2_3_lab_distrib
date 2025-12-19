@@ -2,7 +2,7 @@
 #include <stdexcept>
 
 // Конструктор
-Mixture::Mixture(const Primary& prim1, const Primary& prim2, double p0)
+Mixture::Mixture(const Primary& prim1, const Primary& prim2, double p0) //из праймари
     : p(p0 > 0 && p0 < 1 ? p0 : throw std::invalid_argument("Parameter p must be in (0,1)")),
     d1(prim1), d2(prim2) {
 }

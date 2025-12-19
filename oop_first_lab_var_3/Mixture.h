@@ -17,7 +17,7 @@ public:
     Mixture(const Primary& prim1, const Primary& prim2, double p0);
     Mixture(std::istream& in);
 
-    // Функции доступа к компонентам
+    // Функции доступа к компонентам из праймари
     Primary& component1() { return d1; }
     Primary& component2() { return d2; }
     const Primary& component1() const { return d1; }
